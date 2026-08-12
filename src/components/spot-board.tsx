@@ -32,11 +32,11 @@ function labelsFor(slug: MineralQuote["slug"]) {
 }
 
 export function SpotBoardSection({ board }: Props) {
-  const [expandedSlug, setExpandedSlug] = useState<MineralSlug>("tin");
+  const [expandedSlug, setExpandedSlug] = useState<MineralSlug | null>("tin");
 
-  const expanded =
-    board.minerals.find((m) => m.slug === expandedSlug) ?? board.minerals[0];
-  const collapsed = board.minerals.filter((m) => m.slug !== expanded?.slug);
+  function toggle(slug: MineralSlug) {
+    setExpandedSlug((current) => (current === slug ? null : slug));
+  }
 
   return (
     <section
@@ -53,7 +53,7 @@ export function SpotBoardSection({ board }: Props) {
               Open · Last · Close
             </h2>
             <p className="mt-3 max-w-lg text-[var(--ink-muted)]">
-              Select a mineral to expand. Naira first, dollars beneath.
+              Tap a mineral to expand in place. Naira first, dollars beneath.
             </p>
           </div>
           <div className="text-sm text-[var(--ink-muted)] sm:text-right">
@@ -69,133 +69,108 @@ export function SpotBoardSection({ board }: Props) {
           </div>
         </div>
 
-        <AnimatePresence mode="wait">
-          {expanded && (
-            <motion.article
-              key={expanded.slug}
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="tin-panel mt-8"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--forest)]">
-                    {expanded.slug === "tin" ? "Primary export" : "Selected"}
-                  </p>
-                  <h3 className="mt-2 font-display text-4xl text-[var(--ink)] sm:text-5xl">
-                    {expanded.name}
-                    <span className="ml-3 align-middle text-lg font-sans font-medium text-[var(--ink-muted)]">
-                      {expanded.symbol}
-                    </span>
-                  </h3>
-                  <p className="mt-2 text-sm text-[var(--ink-muted)]">
-                    {expanded.unit}
-                  </p>
-                </div>
-                <StatusPill status={expanded.status} />
-              </div>
+        <ul className="mt-8 divide-y divide-[var(--line)] border-y border-[var(--line)]">
+          {board.minerals.map((mineral) => {
+            const open = expandedSlug === mineral.slug;
+            const labels = labelsFor(mineral.slug);
+            const precise = isPrecise(mineral.slug);
 
-              <div className="mt-10 grid gap-8 sm:grid-cols-3">
-                {(() => {
-                  const labels = labelsFor(expanded.slug);
-                  const precise = isPrecise(expanded.slug);
-                  return (
-                    <>
-                      <PriceBlock
-                        label={labels.open}
-                        usd={expanded.openUsd}
-                        ngn={toNgn(expanded.openUsd, board.fx.rate)}
-                        precise={precise}
-                      />
-                      <PriceBlock
-                        label={labels.last}
-                        usd={expanded.lastUsd}
-                        ngn={toNgn(expanded.lastUsd, board.fx.rate)}
-                        precise={precise}
-                        emphasize
-                      />
-                      <PriceBlock
-                        label={labels.close}
-                        usd={expanded.closeUsd}
-                        ngn={toNgn(expanded.closeUsd, board.fx.rate)}
-                        precise={precise}
-                      />
-                    </>
-                  );
-                })()}
-              </div>
-            </motion.article>
-          )}
-        </AnimatePresence>
-
-        <div className="mt-10">
-          <div className="hidden grid-cols-[1.4fr_1fr_1fr_1fr_auto] gap-4 border-b border-[var(--line)] pb-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)] sm:grid">
-            <span>Mineral</span>
-            <span>Open / Low</span>
-            <span>Last</span>
-            <span>Close / High</span>
-            <span className="text-right">Status</span>
-          </div>
-
-          <ul className="divide-y divide-[var(--line)]">
-            {collapsed.map((mineral, index) => {
-              const range = isRangeQuote(mineral.slug);
-              const precise = isPrecise(mineral.slug);
-              return (
-                <motion.li
-                  key={mineral.slug}
-                  layout
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.35,
-                    delay: index * 0.03,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
+            return (
+              <li key={mineral.slug}>
+                <button
+                  type="button"
+                  aria-expanded={open}
+                  onClick={() => toggle(mineral.slug)}
+                  className={`w-full cursor-pointer text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--forest)] ${
+                    open
+                      ? "tin-panel px-0 sm:px-6"
+                      : "hover:bg-[var(--ink)]/[0.03]"
+                  }`}
                 >
-                  <button
-                    type="button"
-                    onClick={() => setExpandedSlug(mineral.slug)}
-                    className="grid w-full cursor-pointer gap-4 py-7 text-left transition hover:bg-[var(--ink)]/[0.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--forest)] sm:grid-cols-[1.4fr_1fr_1fr_1fr_auto] sm:items-center"
-                  >
-                    <div>
-                      <p className="font-display text-2xl text-[var(--ink)]">
+                  <div className="flex items-start justify-between gap-4 py-5 sm:items-center sm:py-6">
+                    <div className="min-w-0">
+                      {mineral.slug === "tin" && (
+                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--forest)]">
+                          Primary export
+                        </p>
+                      )}
+                      <p
+                        className={`font-display tracking-tight text-[var(--ink)] ${
+                          open ? "text-3xl sm:text-4xl" : "text-2xl"
+                        }`}
+                      >
                         {mineral.name}
+                        <span className="ml-2 align-middle text-sm font-sans font-medium text-[var(--ink-muted)] sm:text-base">
+                          {mineral.symbol}
+                        </span>
                       </p>
                       <p className="mt-1 text-sm text-[var(--ink-muted)]">
-                        {mineral.symbol} · {mineral.unit}
+                        {mineral.unit}
                       </p>
                     </div>
-                    <QuoteCell
-                      label={range ? "Low" : "Open"}
-                      usd={mineral.openUsd}
-                      ngn={toNgn(mineral.openUsd, board.fx.rate)}
-                      precise={precise}
-                    />
-                    <QuoteCell
-                      label={range ? "Spot" : "Last"}
-                      usd={mineral.lastUsd}
-                      ngn={toNgn(mineral.lastUsd, board.fx.rate)}
-                      precise={precise}
-                      emphasize
-                    />
-                    <QuoteCell
-                      label={range ? "High" : "Close"}
-                      usd={mineral.closeUsd}
-                      ngn={toNgn(mineral.closeUsd, board.fx.rate)}
-                      precise={precise}
-                    />
-                    <div className="sm:justify-self-end">
+
+                    <div className="flex shrink-0 flex-col items-end gap-2">
                       <StatusPill status={mineral.status} />
+                      {!open && (
+                        <div className="text-right">
+                          <p className="font-medium text-[var(--ink)]">
+                            {formatNgn(toNgn(mineral.lastUsd, board.fx.rate))}
+                          </p>
+                          <p className="mt-0.5 text-sm text-[var(--ink-muted)]">
+                            {formatUsd(mineral.lastUsd, precise)}
+                          </p>
+                        </div>
+                      )}
+                      <span
+                        className={`text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ink-muted)] transition ${
+                          open ? "rotate-180" : ""
+                        }`}
+                        aria-hidden
+                      >
+                        ▾
+                      </span>
                     </div>
-                  </button>
-                </motion.li>
-              );
-            })}
-          </ul>
-        </div>
+                  </div>
+
+                  <AnimatePresence initial={false}>
+                    {open && (
+                      <motion.div
+                        key="detail"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                        className="overflow-hidden"
+                      >
+                        <div className="grid gap-6 pb-6 sm:grid-cols-3 sm:gap-8 sm:pb-8">
+                          <PriceBlock
+                            label={labels.open}
+                            usd={mineral.openUsd}
+                            ngn={toNgn(mineral.openUsd, board.fx.rate)}
+                            precise={precise}
+                          />
+                          <PriceBlock
+                            label={labels.last}
+                            usd={mineral.lastUsd}
+                            ngn={toNgn(mineral.lastUsd, board.fx.rate)}
+                            precise={precise}
+                            emphasize
+                          />
+                          <PriceBlock
+                            label={labels.close}
+                            usd={mineral.closeUsd}
+                            ngn={toNgn(mineral.closeUsd, board.fx.rate)}
+                            precise={precise}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </div>
     </section>
   );
@@ -221,50 +196,14 @@ function PriceBlock({
       </p>
       <p
         className={`mt-2 font-display tracking-tight text-[var(--ink)] ${
-          emphasize ? "text-4xl sm:text-5xl" : "text-3xl sm:text-4xl"
+          emphasize ? "text-3xl sm:text-4xl" : "text-2xl sm:text-3xl"
         }`}
       >
         {formatNgn(ngn)}
       </p>
       <p
         className={`mt-2 font-medium text-[var(--ink-muted)] ${
-          emphasize ? "text-lg sm:text-xl" : "text-base sm:text-lg"
-        }`}
-      >
-        {formatUsd(usd, precise)}
-      </p>
-    </div>
-  );
-}
-
-function QuoteCell({
-  label,
-  usd,
-  ngn,
-  precise = false,
-  emphasize = false,
-}: {
-  label: string;
-  usd: number | null;
-  ngn: number | null;
-  precise?: boolean;
-  emphasize?: boolean;
-}) {
-  return (
-    <div>
-      <p className="mb-1 text-xs uppercase tracking-[0.16em] text-[var(--ink-muted)] sm:hidden">
-        {label}
-      </p>
-      <p
-        className={`font-medium text-[var(--ink)] ${
-          emphasize ? "text-lg" : "text-base"
-        }`}
-      >
-        {formatNgn(ngn)}
-      </p>
-      <p
-        className={`mt-1 text-[var(--ink-muted)] ${
-          emphasize ? "text-base" : "text-[0.95rem]"
+          emphasize ? "text-base sm:text-lg" : "text-sm sm:text-base"
         }`}
       >
         {formatUsd(usd, precise)}
