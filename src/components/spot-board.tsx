@@ -53,7 +53,7 @@ export function SpotBoardSection({ board }: Props) {
               Open · Last · Close
             </h2>
             <p className="mt-3 max-w-lg text-[var(--ink-muted)]">
-              Tap a mineral to expand in place. Naira first, dollars beneath.
+              Tap a mineral to expand prices in naira and US dollars.
             </p>
           </div>
           <div className="text-sm text-[var(--ink-muted)] sm:text-right">
