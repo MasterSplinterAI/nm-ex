@@ -49,7 +49,7 @@ export function seedBoard(): SpotBoard {
 export async function readSpotBoard(): Promise<SpotBoard> {
   for (const candidate of [PERSIST_PATH, DATA_PATH]) {
     try {
-      const raw = await fs.readFile(candidate, "utf8");
+      const raw = await fs.readFile(/* turbopackIgnore: true */ candidate, "utf8");
       return JSON.parse(raw) as SpotBoard;
     } catch {
       // try next
