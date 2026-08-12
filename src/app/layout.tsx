@@ -17,12 +17,11 @@ const syne = Syne({
 export const metadata: Metadata = {
   title: "NM-EX · Nigerian Metals Exchange",
   description:
-    "Live market prices for Nigeria's solid mineral exports, in naira and US dollars.",
+    "Nigeria's benchmark for transparent mineral prices.",
   metadataBase: new URL("https://nm-ex.com"),
   openGraph: {
     title: "NM-EX · Nigerian Metals Exchange",
-    description:
-      "Live market prices for Nigeria's solid mineral exports, in naira and US dollars.",
+    description: "Nigeria's benchmark for transparent mineral prices.",
     url: "https://nm-ex.com",
     siteName: "NM-EX",
     type: "website",

@@ -38,8 +38,7 @@ export function Hero() {
           transition={{ duration: 0.55, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
           className="mt-2 max-w-lg text-sm leading-relaxed text-[var(--ink-muted)] sm:text-base"
         >
-          Live market prices for Nigeria&apos;s solid mineral exports,
-          in naira and US dollars.
+          Nigeria&apos;s benchmark for transparent mineral prices.
         </motion.p>
       </div>
     </section>
