@@ -1,0 +1,45 @@
+# Build is done on the server (Cornerstone-style). This workflow SSHs in and
+# runs /opt/deployment/deploy-nm-ex.sh after every push to main.
+#
+# Repo secrets:
+#   NM_EX_SSH_PRIVATE_KEY — PEM for ubuntu@3.16.210.84 (same AxisAlgo host key is fine)
+#   NM_EX_SSH_HOST        — 3.16.210.84
+
+name: Deploy production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-nm-ex-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Configure SSH
+        env:
+          KEY: ${{ secrets.NM_EX_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/nm_ex_host_rsa
+          chmod 600 ~/.ssh/nm_ex_host_rsa
+          ssh-keyscan -H "${{ secrets.NM_EX_SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Run remote deploy script
+        env:
+          HOST: ${{ secrets.NM_EX_SSH_HOST }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/nm_ex_host_rsa \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "ubuntu@${HOST}" \
+            'FORCE=1 /opt/deployment/deploy-nm-ex.sh'

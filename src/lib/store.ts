@@ -4,6 +4,9 @@ import type { SpotBoard } from "./types";
 import { MINERALS, emptyQuote } from "./minerals";
 
 const DATA_PATH = path.join(process.cwd(), "data", "spot.json");
+const PERSIST_PATH =
+  process.env.NM_EX_DATA_PATH ||
+  (process.env.NODE_ENV === "production" ? "/var/lib/nm-ex/spot.json" : DATA_PATH);
 
 const SEED_LAST: Partial<Record<(typeof MINERALS)[number]["slug"], number>> = {
   tin: 33_600,
@@ -44,17 +47,29 @@ export function seedBoard(): SpotBoard {
 }
 
 export async function readSpotBoard(): Promise<SpotBoard> {
-  try {
-    const raw = await fs.readFile(DATA_PATH, "utf8");
-    return JSON.parse(raw) as SpotBoard;
-  } catch {
-    const seeded = seedBoard();
-    await writeSpotBoard(seeded);
-    return seeded;
+  for (const candidate of [PERSIST_PATH, DATA_PATH]) {
+    try {
+      const raw = await fs.readFile(candidate, "utf8");
+      return JSON.parse(raw) as SpotBoard;
+    } catch {
+      // try next
+    }
   }
+  const seeded = seedBoard();
+  await writeSpotBoard(seeded);
+  return seeded;
 }
 
 export async function writeSpotBoard(board: SpotBoard): Promise<void> {
-  await fs.mkdir(path.dirname(DATA_PATH), { recursive: true });
-  await fs.writeFile(DATA_PATH, `${JSON.stringify(board, null, 2)}\n`, "utf8");
+  const payload = `${JSON.stringify(board, null, 2)}\n`;
+  await fs.mkdir(path.dirname(PERSIST_PATH), { recursive: true });
+  await fs.writeFile(PERSIST_PATH, payload, "utf8");
+  if (PERSIST_PATH !== DATA_PATH) {
+    try {
+      await fs.mkdir(path.dirname(DATA_PATH), { recursive: true });
+      await fs.writeFile(DATA_PATH, payload, "utf8");
+    } catch {
+      // secondary copy is best-effort
+    }
+  }
 }

@@ -29,8 +29,23 @@ Open [http://localhost:3000](http://localhost:3000).
 - `GET /api/spot` — current board JSON
 - `POST /api/refresh` — re-scrape (optional `x-refresh-secret` header if `REFRESH_SECRET` is set)
 
-## Later
+## Deploy (production)
 
-- Ministry login + official price overrides
-- Refiner / distributor portals for sales & purchases
-- Domain forwards → nm-ex.com
+Host: `ubuntu@3.16.210.84` (shared with JarMetals / Cornerstone).
+
+- App: `/var/www/nm-ex` · systemd `nm-ex.service` · port **3003**
+- Nginx: `nm-ex.com` / `www.nm-ex.com`
+- Persistent prices: `/var/lib/nm-ex/spot.json`
+- Auto-deploy: push to `main` → GitHub Actions → SSH runs `/opt/deployment/deploy-nm-ex.sh`
+
+Manual deploy on the server:
+
+```bash
+FORCE=1 /opt/deployment/deploy-nm-ex.sh
+```
+
+Price refresh (cron or manual):
+
+```bash
+curl -X POST -H "x-refresh-secret: $REFRESH_SECRET" http://127.0.0.1:3003/api/refresh
+```

@@ -1,0 +1,17 @@
+[Unit]
+Description=NM-EX Nigerian Metals Exchange (Next.js)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/nm-ex
+Environment=NODE_ENV=production
+Environment=PORT=3003
+EnvironmentFile=-/etc/nm-ex.env
+ExecStart=/usr/bin/npx next start -p 3003
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
