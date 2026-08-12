@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #eef2ef;
+  --ink: #14201c;
+  --ink-muted: #4d5b55;
+  --forest: #1f6b4f;
+  --copper: #8f6a45;
+  --line: #cfd7d2;
+  --tin-panel: #dde5e0;
+  --background: var(--paper);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-outfit);
+  --font-display: var(--font-syne);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-outfit), ui-sans-serif, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-syne), ui-sans-serif, sans-serif;
+  font-weight: 700;
+}
+
+.hero-veil {
+  background:
+    linear-gradient(
+      180deg,
+      rgb(238 242 239 / 0.55) 0%,
+      rgb(238 242 239 / 0.72) 45%,
+      rgb(238 242 239 / 0.94) 82%,
+      var(--paper) 100%
+    ),
+    linear-gradient(
+      115deg,
+      rgb(31 107 79 / 0.16) 0%,
+      transparent 48%,
+      rgb(20 32 28 / 0.1) 100%
+    );
+  animation: veil-drift 18s ease-in-out infinite alternate;
+}
+
+.grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.tin-panel {
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 0.55), rgb(221 229 224 / 0.9)),
+    var(--tin-panel);
+  border-top: 1px solid rgb(20 32 28 / 0.08);
+  border-bottom: 1px solid rgb(20 32 28 / 0.08);
+  padding: 2rem 0;
+}
+
+@media (min-width: 640px) {
+  .tin-panel {
+    padding: 2.5rem 2rem;
+  }
+}
+
+@keyframes veil-drift {
+  from {
+    filter: hue-rotate(0deg) saturate(1);
+    transform: scale(1);
+  }
+  to {
+    filter: hue-rotate(8deg) saturate(1.05);
+    transform: scale(1.03);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .hero-veil {
+    animation: none;
+  }
+}

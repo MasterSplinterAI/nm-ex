@@ -1,0 +1,115 @@
+{
+  "updatedAt": "2026-08-12T16:47:23.426Z",
+  "fx": {
+    "pair": "USD/NGN",
+    "rate": 1363.642,
+    "source": "xe.com",
+    "scrapedAt": "2026-08-12T16:47:23.426Z"
+  },
+  "minerals": [
+    {
+      "slug": "tin",
+      "name": "Tin",
+      "symbol": "Sn",
+      "unit": "USD / tonne",
+      "rank": 1,
+      "sourceUrl": "https://www-old.metal.com/Tin/LME_SN_3M",
+      "openUsd": 55745,
+      "lastUsd": 55710,
+      "closeUsd": 55565,
+      "scrapedAt": "2026-08-12T16:47:26.933Z",
+      "status": "live"
+    },
+    {
+      "slug": "copper",
+      "name": "Copper",
+      "symbol": "Cu",
+      "unit": "USD / tonne",
+      "rank": 2,
+      "sourceUrl": "https://www-old.metal.com/Copper/LME_CA_3M",
+      "openUsd": 14141,
+      "lastUsd": 14114.5,
+      "closeUsd": 14153,
+      "scrapedAt": "2026-08-12T16:47:28.288Z",
+      "status": "live"
+    },
+    {
+      "slug": "aluminum",
+      "name": "Aluminum",
+      "symbol": "Al",
+      "unit": "USD / tonne",
+      "rank": 3,
+      "sourceUrl": "https://www-old.metal.com/Aluminum/LME_AH_3M",
+      "openUsd": 3365,
+      "lastUsd": 3302.5,
+      "closeUsd": 3362.5,
+      "scrapedAt": "2026-08-12T16:47:29.709Z",
+      "status": "live"
+    },
+    {
+      "slug": "lead",
+      "name": "Lead",
+      "symbol": "Pb",
+      "unit": "USD / tonne",
+      "rank": 4,
+      "sourceUrl": "https://www-old.metal.com/Lead/LME_PB_3M",
+      "openUsd": 1905,
+      "lastUsd": 1906,
+      "closeUsd": 1903,
+      "scrapedAt": "2026-08-12T16:47:30.753Z",
+      "status": "live"
+    },
+    {
+      "slug": "zinc",
+      "name": "Zinc",
+      "symbol": "Zn",
+      "unit": "USD / tonne",
+      "rank": 5,
+      "sourceUrl": "https://www-old.metal.com/Zinc/LME_ZS_3M",
+      "openUsd": 3727.5,
+      "lastUsd": 3738,
+      "closeUsd": 3734.5,
+      "scrapedAt": "2026-08-12T16:47:31.954Z",
+      "status": "live"
+    },
+    {
+      "slug": "nickel",
+      "name": "Nickel",
+      "symbol": "Ni",
+      "unit": "USD / tonne",
+      "rank": 6,
+      "sourceUrl": "https://www-old.metal.com/Nickel/LME_NI_3M",
+      "openUsd": 16840,
+      "lastUsd": 16895,
+      "closeUsd": 16820,
+      "scrapedAt": "2026-08-12T16:47:33.180Z",
+      "status": "live"
+    },
+    {
+      "slug": "gold",
+      "name": "Gold",
+      "symbol": "Au",
+      "unit": "USD / oz",
+      "rank": 7,
+      "sourceUrl": "https://www-old.metal.com/price/Precious-Metals/Gold",
+      "openUsd": 3893.67,
+      "lastUsd": 3893.67,
+      "closeUsd": 3893.67,
+      "scrapedAt": "2026-08-12T16:47:33.845Z",
+      "status": "live"
+    },
+    {
+      "slug": "tantalite",
+      "name": "Tantalite",
+      "symbol": "Ta",
+      "unit": "USD / lb · 30% Ta₂O₅ CIF",
+      "rank": 8,
+      "sourceUrl": "https://www-old.metal.com/price/Minor-Metals/Niobium-Tantalum",
+      "openUsd": 225,
+      "lastUsd": 230,
+      "closeUsd": 235,
+      "scrapedAt": "2026-08-12T16:47:34.218Z",
+      "status": "live"
+    }
+  ]
+}
