@@ -17,12 +17,12 @@ const syne = Syne({
 export const metadata: Metadata = {
   title: "NM-EX · Nigerian Metals Exchange",
   description:
-    "Live spot reference for Nigeria's principal mineral exports — Tin, Lead, Zinc, Gold, and Columbite–Tantalite — in USD and NGN.",
+    "Live market prices for Nigeria's solid mineral exports, in naira and US dollars.",
   metadataBase: new URL("https://nm-ex.com"),
   openGraph: {
     title: "NM-EX · Nigerian Metals Exchange",
     description:
-      "Official spot reference for Nigeria's solid mineral exports, converted to naira.",
+      "Live market prices for Nigeria's solid mineral exports, in naira and US dollars.",
     url: "https://nm-ex.com",
     siteName: "NM-EX",
     type: "website",
