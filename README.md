@@ -7,7 +7,9 @@ Public spot reference board for Nigeria's principal mineral exports, with USD pr
 ## Features (v1)
 
 - Full-bleed brand hero + live spot board
-- Minerals: **Tin** (primary), Copper, Aluminum, Lead, Zinc, Nickel, Gold, Tantalite
+- Minerals: **Tin** (99.9% Sn LME + 70% concentrate procurement desk), Copper, Aluminum, Lead, Zinc, Nickel, Gold, Tantalite
+- Tin concentrate: **Procurement = LME × NM-EX benchmark % × assay %** (benchmark starts at 70%, visible; assay seller-editable)
+- Government royalty shown separately at **7.5%**
 - Open / Last / Close with **NGN on top**, USD underneath
 - Scrapers:
   - **metal.com** LME 3M: Tin, Copper, Aluminum, Lead, Zinc, Nickel
@@ -36,6 +38,7 @@ Host: `ubuntu@3.16.210.84` (shared with JarMetals / Cornerstone).
 - App: `/var/www/nm-ex` · systemd `nm-ex.service` · port **3003**
 - Nginx: `nm-ex.com` / `www.nm-ex.com`
 - Persistent prices: `/var/lib/nm-ex/spot.json`
+- Tin policy (benchmark / royalty): `/var/lib/nm-ex/policy.json` or env `TIN_BENCHMARK_PCT`, `GOVERNMENT_ROYALTY_PCT`
 - Auto-deploy: push to `main` → GitHub Actions → SSH runs `/opt/deployment/deploy-nm-ex.sh`
 
 Manual deploy on the server:

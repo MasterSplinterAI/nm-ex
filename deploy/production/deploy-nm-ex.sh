@@ -65,6 +65,7 @@ export CI=1
 if [ -f /etc/nm-ex.env ]; then
   set -a
   # shellcheck disable=SC1091
+  # Deploy runs as ubuntu; systemd still loads the file as root for the app.
   . /etc/nm-ex.env
   set +a
 fi
@@ -75,15 +76,17 @@ npm ci --include=dev --no-audit --no-fund
 echo "==> Building Next.js"
 NODE_ENV=production npm run build
 
-# Persist spot board data outside the release tree
+# Persist spot board + policy outside the release tree
 mkdir -p "$RELEASE_DIR/data"
-if [ -f "$DATA_DIR/spot.json" ]; then
-  cp "$DATA_DIR/spot.json" "$RELEASE_DIR/data/spot.json"
-elif [ -f "$SITE_DIR/data/spot.json" ]; then
-  cp "$SITE_DIR/data/spot.json" "$RELEASE_DIR/data/spot.json"
-  sudo cp "$SITE_DIR/data/spot.json" "$DATA_DIR/spot.json"
-  sudo chown www-data:www-data "$DATA_DIR/spot.json"
-fi
+for file in spot.json policy.json; do
+  if [ -f "$DATA_DIR/$file" ]; then
+    cp "$DATA_DIR/$file" "$RELEASE_DIR/data/$file"
+  elif [ -f "$SITE_DIR/data/$file" ]; then
+    cp "$SITE_DIR/data/$file" "$RELEASE_DIR/data/$file"
+    sudo cp "$SITE_DIR/data/$file" "$DATA_DIR/$file"
+    sudo chown www-data:www-data "$DATA_DIR/$file"
+  fi
+done
 
 echo "==> Swapping into $SITE_DIR"
 sudo mkdir -p "$SITE_DIR"
@@ -93,9 +96,11 @@ sudo rsync -a --delete \
 
 # Keep writable data dir and symlink/copy into site for the running app
 sudo mkdir -p "$SITE_DIR/data"
-if [ -f "$DATA_DIR/spot.json" ]; then
-  sudo cp "$DATA_DIR/spot.json" "$SITE_DIR/data/spot.json"
-fi
+for file in spot.json policy.json; do
+  if [ -f "$DATA_DIR/$file" ]; then
+    sudo cp "$DATA_DIR/$file" "$SITE_DIR/data/$file"
+  fi
+done
 sudo chown -R www-data:www-data "$SITE_DIR"
 sudo chown -R www-data:www-data "$DATA_DIR"
 

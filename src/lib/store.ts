@@ -1,12 +1,19 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import type { SpotBoard } from "./types";
+import type { SpotBoard, TinPolicy } from "./types";
 import { MINERALS, emptyQuote } from "./minerals";
+import { DEFAULT_TIN_POLICY, policyFromEnv } from "./policy";
 
 const DATA_PATH = path.join(process.cwd(), "data", "spot.json");
 const PERSIST_PATH =
   process.env.NM_EX_DATA_PATH ||
   (process.env.NODE_ENV === "production" ? "/var/lib/nm-ex/spot.json" : DATA_PATH);
+const POLICY_PATH = path.join(process.cwd(), "data", "policy.json");
+const POLICY_PERSIST_PATH =
+  process.env.NM_EX_POLICY_PATH ||
+  (process.env.NODE_ENV === "production"
+    ? "/var/lib/nm-ex/policy.json"
+    : POLICY_PATH);
 
 const SEED_LAST: Partial<Record<(typeof MINERALS)[number]["slug"], number>> = {
   tin: 33_600,
@@ -46,11 +53,24 @@ export function seedBoard(): SpotBoard {
   };
 }
 
+function hydrateBoard(board: SpotBoard): SpotBoard {
+  return {
+    ...board,
+    minerals: board.minerals.map((mineral) => {
+      const def = MINERALS.find((item) => item.slug === mineral.slug);
+      return {
+        ...mineral,
+        spec: mineral.spec ?? def?.spec ?? null,
+      };
+    }),
+  };
+}
+
 export async function readSpotBoard(): Promise<SpotBoard> {
   for (const candidate of [PERSIST_PATH, DATA_PATH]) {
     try {
       const raw = await fs.readFile(/* turbopackIgnore: true */ candidate, "utf8");
-      return JSON.parse(raw) as SpotBoard;
+      return hydrateBoard(JSON.parse(raw) as SpotBoard);
     } catch {
       // try next
     }
@@ -68,6 +88,41 @@ export async function writeSpotBoard(board: SpotBoard): Promise<void> {
     try {
       await fs.mkdir(path.dirname(DATA_PATH), { recursive: true });
       await fs.writeFile(DATA_PATH, payload, "utf8");
+    } catch {
+      // secondary copy is best-effort
+    }
+  }
+}
+
+function mergePolicy(raw: Partial<TinPolicy> | null): TinPolicy {
+  return policyFromEnv({
+    ...DEFAULT_TIN_POLICY,
+    ...raw,
+  });
+}
+
+export async function readTinPolicy(): Promise<TinPolicy> {
+  for (const candidate of [POLICY_PERSIST_PATH, POLICY_PATH]) {
+    try {
+      const raw = await fs.readFile(/* turbopackIgnore: true */ candidate, "utf8");
+      return mergePolicy(JSON.parse(raw) as Partial<TinPolicy>);
+    } catch {
+      // try next
+    }
+  }
+  const seeded = mergePolicy(null);
+  await writeTinPolicy(seeded);
+  return seeded;
+}
+
+export async function writeTinPolicy(policy: TinPolicy): Promise<void> {
+  const payload = `${JSON.stringify(policy, null, 2)}\n`;
+  await fs.mkdir(path.dirname(POLICY_PERSIST_PATH), { recursive: true });
+  await fs.writeFile(POLICY_PERSIST_PATH, payload, "utf8");
+  if (POLICY_PERSIST_PATH !== POLICY_PATH) {
+    try {
+      await fs.mkdir(path.dirname(POLICY_PATH), { recursive: true });
+      await fs.writeFile(POLICY_PATH, payload, "utf8");
     } catch {
       // secondary copy is best-effort
     }

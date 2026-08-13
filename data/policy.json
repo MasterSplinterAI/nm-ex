@@ -1,0 +1,9 @@
+{
+  "refinedSpec": "99.9% Sn",
+  "concentrateSpec": "70% Sn",
+  "benchmarkPct": 70,
+  "defaultAssayPct": 70,
+  "minAssayPct": 50,
+  "maxAssayPct": 80,
+  "royaltyPct": 7.5
+}

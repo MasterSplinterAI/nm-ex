@@ -41,6 +41,10 @@ export function toNgn(usdValue: number | null, rate: number): number | null {
   return usdValue * rate;
 }
 
+export function formatPct(value: number, digits = 1): string {
+  return `${Number.parseFloat(value.toFixed(digits))}%`;
+}
+
 export function formatAsOf(iso: string): string {
   return new Intl.DateTimeFormat("en-NG", {
     dateStyle: "medium",

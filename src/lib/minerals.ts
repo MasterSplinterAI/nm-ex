@@ -5,6 +5,7 @@ export type MineralDefinition = {
   name: string;
   symbol: string;
   unit: string;
+  spec?: string;
   rank: number;
   sourceUrl: string;
   scrapeKind: "metal-com-lme" | "smm-table";
@@ -25,6 +26,7 @@ export const MINERALS: MineralDefinition[] = [
     name: "Tin",
     symbol: "Sn",
     unit: "USD / tonne",
+    spec: "99.9% Sn",
     rank: 1,
     sourceUrl: "https://www-old.metal.com/Tin/LME_SN_3M",
     scrapeKind: "metal-com-lme",
@@ -120,6 +122,7 @@ export function emptyQuote(def: MineralDefinition): MineralQuote {
     name: def.name,
     symbol: def.symbol,
     unit: def.unit,
+    spec: def.spec ?? null,
     rank: def.rank,
     sourceUrl: def.sourceUrl,
     openUsd: null,

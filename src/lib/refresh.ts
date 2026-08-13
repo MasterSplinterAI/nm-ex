@@ -14,6 +14,7 @@ async function refreshMineral(
     name: def.name,
     symbol: def.symbol,
     unit: def.unit,
+    spec: def.spec ?? previous?.spec ?? null,
     rank: def.rank,
     sourceUrl: def.sourceUrl,
     openUsd: previous?.openUsd ?? null,

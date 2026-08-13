@@ -5,8 +5,8 @@ export function SiteFooter() {
         <div>
           <p className="font-display text-3xl tracking-tight">NM-EX</p>
           <p className="mt-2 max-w-sm text-sm leading-relaxed text-white/70">
-            Nigerian Metals Exchange — a public reference board for solid mineral
-            spot values in USD and NGN.
+            Nigeria&apos;s benchmark for transparent mineral prices — LME
+            reference, NM-EX procurement, and government royalty on one board.
           </p>
         </div>
         <div className="text-sm text-white/60">

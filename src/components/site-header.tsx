@@ -3,23 +3,26 @@ import { NigeriaFlag } from "./nigeria-flag";
 export function SiteHeader() {
   return (
     <header className="absolute inset-x-0 top-0 z-20">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 sm:px-10">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-10 sm:py-4">
         <a
           href="/"
           className="font-display text-base tracking-tight text-[var(--ink)] sm:text-lg"
         >
           NM-EX
         </a>
-        <div className="flex items-center gap-4 sm:gap-5">
-          <nav className="hidden items-center gap-5 text-sm text-[var(--ink-muted)] sm:flex">
-            <a href="#spot" className="transition hover:text-[var(--ink)]">
-              Spot
+        <div className="flex items-center gap-3 sm:gap-5">
+          <nav className="flex items-center gap-3 text-xs text-[var(--ink-muted)] sm:gap-5 sm:text-sm">
+            <a href="#tin" className="transition hover:text-[var(--ink)]">
+              Tin
             </a>
-            <span className="text-[var(--ink)]/35">|</span>
-            <span>Lagos · WAT</span>
+            <a href="#concentrate" className="transition hover:text-[var(--ink)]">
+              Concentrate
+            </a>
+            <span className="hidden text-[var(--ink)]/35 sm:inline">|</span>
+            <span className="hidden sm:inline">Lagos · WAT</span>
           </nav>
-          <div className="flex items-center gap-2.5 border border-[var(--ink)]/15 bg-[var(--paper)]/70 px-2.5 py-1.5 backdrop-blur-sm">
-            <NigeriaFlag className="h-5 w-[30px] shrink-0 shadow-sm" />
+          <div className="flex items-center gap-2 border border-[var(--ink)]/15 bg-[var(--paper)]/70 px-2 py-1 backdrop-blur-sm sm:gap-2.5 sm:px-2.5 sm:py-1.5">
+            <NigeriaFlag className="h-4 w-6 shrink-0 shadow-sm sm:h-5 sm:w-[30px]" />
             <span className="hidden text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--ink)] sm:inline">
               Nigeria
             </span>

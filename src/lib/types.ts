@@ -13,6 +13,7 @@ export type MineralQuote = {
   name: string;
   symbol: string;
   unit: string;
+  spec: string | null;
   rank: number;
   sourceUrl: string;
   openUsd: number | null;
@@ -33,4 +34,17 @@ export type SpotBoard = {
   updatedAt: string;
   fx: FxQuote;
   minerals: MineralQuote[];
+};
+
+/** Central NM-EX tin procurement settings — editable without a code change. */
+export type TinPolicy = {
+  refinedSpec: string;
+  concentrateSpec: string;
+  /** NM-EX share of LME paid for concentrate, e.g. 70 */
+  benchmarkPct: number;
+  defaultAssayPct: number;
+  minAssayPct: number;
+  maxAssayPct: number;
+  /** Government royalty on the procurement value, e.g. 7.5 */
+  royaltyPct: number;
 };

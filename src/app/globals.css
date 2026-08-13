@@ -69,13 +69,6 @@ body {
     var(--tin-panel);
   border-top: 1px solid rgb(20 32 28 / 0.08);
   border-bottom: 1px solid rgb(20 32 28 / 0.08);
-  padding: 2rem 0;
-}
-
-@media (min-width: 640px) {
-  .tin-panel {
-    padding: 2.5rem 2rem;
-  }
 }
 
 @keyframes veil-drift {
