@@ -1,3 +1,4 @@
+import { LiveClock } from "./live-clock";
 import { NigeriaFlag } from "./nigeria-flag";
 
 export function SiteHeader() {
@@ -18,8 +19,8 @@ export function SiteHeader() {
             <a href="#tin" className="transition hover:text-[var(--ink)]">
               Tin
             </a>
-            <span className="hidden text-[var(--ink)]/35 sm:inline">|</span>
-            <span className="hidden sm:inline">Lagos · WAT</span>
+            <span className="text-[var(--ink)]/35">|</span>
+            <LiveClock className="text-[var(--ink)]" />
           </nav>
           <div className="flex items-center gap-2 border border-[var(--ink)]/15 bg-[var(--paper)]/70 px-2 py-1 backdrop-blur-sm sm:gap-2.5 sm:px-2.5 sm:py-1.5">
             <NigeriaFlag className="h-4 w-6 shrink-0 shadow-sm sm:h-5 sm:w-[30px]" />
