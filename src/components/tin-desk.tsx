@@ -21,8 +21,8 @@ const FLOW = [
   "Assay",
   "Procurement Value",
   "Smelting",
-  "Government Royalty",
   "Refined Tin",
+  "Government Royalty",
 ] as const;
 
 type Props = {
