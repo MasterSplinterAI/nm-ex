@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { TinDesk } from "@/components/tin-desk";
 import { MINERALS } from "@/lib/minerals";
@@ -33,10 +33,25 @@ function labelsFor(slug: MineralQuote["slug"]) {
   return { open: "Open", last: "Last", close: "Close" } as const;
 }
 
+function slugFromHash(): MineralSlug | null {
+  if (typeof window === "undefined") return null;
+  const hash = window.location.hash.replace("#", "");
+  if (hash === "tin" || hash === "concentrate") return "tin";
+  return null;
+}
+
 export function SpotBoardSection({ board, policy }: Props) {
-  const tin = board.minerals.find((m) => m.slug === "tin");
-  const others = board.minerals.filter((m) => m.slug !== "tin");
   const [expandedSlug, setExpandedSlug] = useState<MineralSlug | null>(null);
+
+  useEffect(() => {
+    const applyHash = () => {
+      const fromHash = slugFromHash();
+      if (fromHash) setExpandedSlug(fromHash);
+    };
+    applyHash();
+    window.addEventListener("hashchange", applyHash);
+    return () => window.removeEventListener("hashchange", applyHash);
+  }, []);
 
   function toggle(slug: MineralSlug) {
     setExpandedSlug((current) => (current === slug ? null : slug));
@@ -57,7 +72,7 @@ export function SpotBoardSection({ board, policy }: Props) {
               Open · Last · Close
             </h2>
             <p className="mt-2 max-w-lg text-sm text-[var(--ink-muted)] sm:text-base">
-              Tin is the NM-EX procurement desk. Other metals expand in place.
+              Tap a mineral to expand. Tin includes cassiterite procurement.
             </p>
           </div>
           <div className="text-sm text-[var(--ink-muted)] sm:text-right">
@@ -73,115 +88,120 @@ export function SpotBoardSection({ board, policy }: Props) {
           </div>
         </div>
 
-        {tin && (
-          <div className="mt-6 sm:mt-8">
-            <TinDesk tin={tin} fxRate={board.fx.rate} policy={policy} />
-          </div>
-        )}
+        <ul className="mt-6 divide-y divide-[var(--line)] border-y border-[var(--line)] sm:mt-8">
+          {board.minerals.map((mineral) => {
+            const open = expandedSlug === mineral.slug;
+            const labels = labelsFor(mineral.slug);
+            const precise = isPrecise(mineral.slug);
+            const isTin = mineral.slug === "tin";
 
-        <div className="mt-8 sm:mt-10">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)] sm:text-xs">
-            Other minerals
-          </p>
-          <ul className="divide-y divide-[var(--line)] border-y border-[var(--line)]">
-            {others.map((mineral) => {
-              const open = expandedSlug === mineral.slug;
-              const labels = labelsFor(mineral.slug);
-              const precise = isPrecise(mineral.slug);
-
-              return (
-                <li key={mineral.slug}>
-                  <button
-                    type="button"
-                    aria-expanded={open}
-                    onClick={() => toggle(mineral.slug)}
-                    className={`w-full cursor-pointer touch-manipulation text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--forest)] ${
-                      open
-                        ? "tin-panel px-3 sm:px-6"
-                        : "hover:bg-[var(--ink)]/[0.03]"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3 py-4 sm:items-center sm:gap-4 sm:py-6">
-                      <div className="min-w-0">
-                        <p
-                          className={`font-display tracking-tight text-[var(--ink)] ${
-                            open ? "text-2xl sm:text-4xl" : "text-xl sm:text-2xl"
-                          }`}
-                        >
-                          {mineral.name}
-                          <span className="ml-2 align-middle text-sm font-sans font-medium text-[var(--ink-muted)]">
-                            {mineral.symbol}
-                          </span>
+            return (
+              <li
+                key={mineral.slug}
+                id={isTin ? "tin" : undefined}
+                className={open ? "tin-panel" : undefined}
+              >
+                <button
+                  type="button"
+                  aria-expanded={open}
+                  onClick={() => toggle(mineral.slug)}
+                  className="w-full cursor-pointer touch-manipulation px-1 py-4 text-left transition hover:bg-[var(--ink)]/[0.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--forest)] sm:px-3 sm:py-6"
+                >
+                  <div className="flex items-start justify-between gap-3 sm:items-center sm:gap-4">
+                    <div className="min-w-0">
+                      {isTin && (
+                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--forest)]">
+                          Primary export
                         </p>
-                        <p className="mt-1 text-xs text-[var(--ink-muted)] sm:text-sm">
-                          {mineral.spec ? `${mineral.spec} · ` : ""}
-                          {mineral.unit}
-                        </p>
-                      </div>
-
-                      <div className="flex shrink-0 flex-col items-end gap-1.5">
-                        <StatusPill status={mineral.status} />
-                        {!open && (
-                          <div className="text-right">
-                            <p className="text-sm font-medium text-[var(--ink)] sm:text-base">
-                              {formatNgn(toNgn(mineral.lastUsd, board.fx.rate))}
-                            </p>
-                            <p className="mt-0.5 text-xs text-[var(--ink-muted)] sm:text-sm">
-                              {formatUsd(mineral.lastUsd, precise)}
-                            </p>
-                          </div>
-                        )}
-                        <span
-                          className={`text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ink-muted)] transition ${
-                            open ? "rotate-180" : ""
-                          }`}
-                          aria-hidden
-                        >
-                          ▾
+                      )}
+                      <p
+                        className={`font-display tracking-tight text-[var(--ink)] ${
+                          open ? "text-2xl sm:text-4xl" : "text-xl sm:text-2xl"
+                        }`}
+                      >
+                        {mineral.name}
+                        <span className="ml-2 align-middle text-sm font-sans font-medium text-[var(--ink-muted)]">
+                          {mineral.symbol}
                         </span>
-                      </div>
+                      </p>
+                      <p className="mt-1 text-xs text-[var(--ink-muted)] sm:text-sm">
+                        {mineral.spec ? `${mineral.spec} · ` : ""}
+                        {mineral.unit}
+                      </p>
                     </div>
 
-                    <AnimatePresence initial={false}>
-                      {open && (
-                        <motion.div
-                          key="detail"
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                          className="overflow-hidden"
-                        >
-                          <div className="grid grid-cols-1 gap-5 pb-5 sm:grid-cols-3 sm:gap-8 sm:pb-8">
-                            <PriceBlock
-                              label={labels.open}
-                              usd={mineral.openUsd}
-                              ngn={toNgn(mineral.openUsd, board.fx.rate)}
-                              precise={precise}
-                            />
-                            <PriceBlock
-                              label={labels.last}
-                              usd={mineral.lastUsd}
-                              ngn={toNgn(mineral.lastUsd, board.fx.rate)}
-                              precise={precise}
-                              emphasize
-                            />
-                            <PriceBlock
-                              label={labels.close}
-                              usd={mineral.closeUsd}
-                              ngn={toNgn(mineral.closeUsd, board.fx.rate)}
-                              precise={precise}
-                            />
-                          </div>
-                        </motion.div>
+                    <div className="flex shrink-0 flex-col items-end gap-1.5">
+                      <StatusPill status={mineral.status} />
+                      {!open && (
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-[var(--ink)] sm:text-base">
+                            {formatNgn(toNgn(mineral.lastUsd, board.fx.rate))}
+                          </p>
+                          <p className="mt-0.5 text-xs text-[var(--ink-muted)] sm:text-sm">
+                            {formatUsd(mineral.lastUsd, precise)}
+                          </p>
+                        </div>
                       )}
-                    </AnimatePresence>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+                      <span
+                        className={`text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ink-muted)] transition ${
+                          open ? "rotate-180" : ""
+                        }`}
+                        aria-hidden
+                      >
+                        ▾
+                      </span>
+                    </div>
+                  </div>
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {open && (
+                    <motion.div
+                      key="detail"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                      className="overflow-hidden"
+                    >
+                      {isTin ? (
+                        <div className="px-1 pb-5 sm:px-3 sm:pb-8">
+                          <TinDesk
+                            tin={mineral}
+                            fxRate={board.fx.rate}
+                            policy={policy}
+                          />
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-5 px-1 pb-5 sm:grid-cols-3 sm:gap-8 sm:px-3 sm:pb-8">
+                          <PriceBlock
+                            label={labels.open}
+                            usd={mineral.openUsd}
+                            ngn={toNgn(mineral.openUsd, board.fx.rate)}
+                            precise={precise}
+                          />
+                          <PriceBlock
+                            label={labels.last}
+                            usd={mineral.lastUsd}
+                            ngn={toNgn(mineral.lastUsd, board.fx.rate)}
+                            precise={precise}
+                            emphasize
+                          />
+                          <PriceBlock
+                            label={labels.close}
+                            usd={mineral.closeUsd}
+                            ngn={toNgn(mineral.closeUsd, board.fx.rate)}
+                            precise={precise}
+                          />
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </li>
+            );
+          })}
+        </ul>
       </div>
     </section>
   );

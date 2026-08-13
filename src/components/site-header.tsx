@@ -12,11 +12,11 @@ export function SiteHeader() {
         </a>
         <div className="flex items-center gap-3 sm:gap-5">
           <nav className="flex items-center gap-3 text-xs text-[var(--ink-muted)] sm:gap-5 sm:text-sm">
+            <a href="#spot" className="transition hover:text-[var(--ink)]">
+              Spot
+            </a>
             <a href="#tin" className="transition hover:text-[var(--ink)]">
               Tin
-            </a>
-            <a href="#concentrate" className="transition hover:text-[var(--ink)]">
-              Concentrate
             </a>
             <span className="hidden text-[var(--ink)]/35 sm:inline">|</span>
             <span className="hidden sm:inline">Lagos · WAT</span>
