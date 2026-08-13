@@ -65,7 +65,7 @@ export function SpotBoardSection({ board, policy }: Props) {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-10 sm:py-14">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
           <div>
-            <h2 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--forest)] sm:text-xs">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--forest)] sm:text-base">
               Spot board
             </h2>
             <p className="mt-2 max-w-lg text-sm text-[var(--ink-muted)] sm:text-base">
