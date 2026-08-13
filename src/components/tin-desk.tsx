@@ -4,7 +4,9 @@ import { useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { MineralQuote, TinPolicy } from "@/lib/types";
 import {
+  burdenedUsd,
   clampAssay,
+  clampRoyalty,
   concentrateProcurementUsd,
   royaltyUsd,
 } from "@/lib/policy";
@@ -33,16 +35,21 @@ type Props = {
 
 export function TinDesk({ tin, fxRate, policy }: Props) {
   const [assayPct, setAssayPct] = useState(policy.defaultAssayPct);
+  const [royaltyPct, setRoyaltyPct] = useState(policy.royaltyPct);
   const [purityOpen, setPurityOpen] = useState(false);
 
   const assay = clampAssay(assayPct, policy);
+  const royaltyRate = clampRoyalty(royaltyPct, policy);
   const lme = tin.lastUsd;
   const procurement = concentrateProcurementUsd(
     lme,
     policy.benchmarkPct,
     assay,
   );
-  const royalty = royaltyUsd(procurement, policy.royaltyPct);
+  const concentrateRoyalty = royaltyUsd(procurement, royaltyRate);
+  const concentrateBurdened = burdenedUsd(procurement, royaltyRate);
+  const refinedRoyalty = royaltyUsd(lme, royaltyRate);
+  const refinedBurdened = burdenedUsd(lme, royaltyRate);
   const purityChanged = assay !== policy.defaultAssayPct;
 
   const formula = useMemo(
@@ -75,6 +82,25 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
             ngn={toNgn(tin.closeUsd, fxRate)}
           />
         </div>
+        <div className="mt-5 border-t border-[var(--line)] pt-4 sm:pt-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--copper)]">
+            Export burdened · last + {formatPct(royaltyRate, 1)} royalty
+          </p>
+          <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="font-display text-2xl tracking-tight text-[var(--ink)] sm:text-3xl">
+                {formatNgn(toNgn(refinedBurdened, fxRate))}
+              </p>
+              <p className="mt-1 text-sm font-medium text-[var(--ink-muted)]">
+                {formatUsd(refinedBurdened)}
+              </p>
+            </div>
+            <p className="max-w-xs text-xs leading-relaxed text-[var(--ink-muted)] sm:text-right">
+              LME last {formatUsd(lme)} + royalty {formatUsd(refinedRoyalty)}.
+              This is the all-in export reference a buyer should underwrite.
+            </p>
+          </div>
+        </div>
       </div>
 
       <article
@@ -99,7 +125,7 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
               NM-EX {formatPct(policy.benchmarkPct, 1)} of LME
             </Badge>
             <Badge tone="copper">
-              Royalty {formatPct(policy.royaltyPct, 1)}
+              Royalty {formatPct(royaltyRate, 1)}
             </Badge>
           </div>
         </div>
@@ -127,17 +153,79 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
           {formula}
         </p>
 
-        <div className="mt-4 flex flex-col gap-2 border-t border-[var(--line)] pt-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mt-4 border-t border-[var(--line)] pt-4">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--copper)]">
-            Government royalty · {formatPct(policy.royaltyPct, 1)}
+            Government royalty
           </p>
-          <div className="sm:text-right">
-            <p className="font-display text-lg text-[var(--ink)] sm:text-xl">
-              {formatNgn(toNgn(royalty, fxRate))}
+          <p className="mt-1 text-xs text-[var(--ink-muted)] sm:text-sm">
+            Slide the official take to see why the export price sits above the
+            procurement rate — buyer cost, seller explanation, government
+            revenue.
+          </p>
+          <label className="mt-3 block">
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">
+              Royalty · % of value
+            </span>
+            <div className="mt-2 flex items-center gap-3">
+              <input
+                type="range"
+                min={policy.minRoyaltyPct}
+                max={policy.maxRoyaltyPct}
+                step={0.5}
+                value={royaltyRate}
+                onChange={(event) =>
+                  setRoyaltyPct(Number.parseFloat(event.target.value))
+                }
+                className="h-11 w-full accent-[var(--copper)]"
+                aria-label="Government royalty percent"
+              />
+              <input
+                type="number"
+                inputMode="decimal"
+                min={policy.minRoyaltyPct}
+                max={policy.maxRoyaltyPct}
+                step={0.5}
+                value={royaltyRate}
+                onChange={(event) => {
+                  const next = Number.parseFloat(event.target.value);
+                  if (Number.isFinite(next)) setRoyaltyPct(next);
+                }}
+                className="h-11 w-[4.75rem] shrink-0 border border-[var(--line)] bg-white px-2 text-center text-base font-semibold text-[var(--ink)]"
+                aria-label="Government royalty percent numeric"
+              />
+            </div>
+            <p className="mt-1 text-xs text-[var(--ink-muted)]">
+              Default {formatPct(policy.royaltyPct, 1)} · {policy.minRoyaltyPct}–
+              {policy.maxRoyaltyPct}%
             </p>
-            <p className="text-xs text-[var(--ink-muted)] sm:text-sm">
-              {formatUsd(royalty)}
-            </p>
+          </label>
+
+          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
+                Royalty
+              </p>
+              <p className="mt-1 font-display text-xl text-[var(--ink)] sm:text-2xl">
+                {formatNgn(toNgn(concentrateRoyalty, fxRate))}
+              </p>
+              <p className="mt-0.5 text-xs text-[var(--ink-muted)] sm:text-sm">
+                {formatUsd(concentrateRoyalty)}
+              </p>
+            </div>
+            <div className="col-span-2 sm:col-span-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--copper)]">
+                Burdened export · cost + royalty
+              </p>
+              <p className="mt-1 font-display text-2xl tracking-tight text-[var(--ink)] sm:text-3xl">
+                {formatNgn(toNgn(concentrateBurdened, fxRate))}
+              </p>
+              <p className="mt-0.5 text-sm font-medium text-[var(--ink-muted)]">
+                {formatUsd(concentrateBurdened)}
+              </p>
+              <p className="mt-1 text-xs text-[var(--ink-muted)]">
+                {formatUsd(procurement)} + {formatUsd(concentrateRoyalty)}
+              </p>
+            </div>
           </div>
         </div>
 

@@ -8,6 +8,8 @@ export const DEFAULT_TIN_POLICY: TinPolicy = {
   minAssayPct: 50,
   maxAssayPct: 80,
   royaltyPct: 7.5,
+  minRoyaltyPct: 0,
+  maxRoyaltyPct: 15,
 };
 
 function pctFromEnv(name: string, fallback: number): number {
@@ -30,6 +32,10 @@ export function clampAssay(assayPct: number, policy: TinPolicy): number {
   return Math.min(policy.maxAssayPct, Math.max(policy.minAssayPct, assayPct));
 }
 
+export function clampRoyalty(royaltyPct: number, policy: TinPolicy): number {
+  return Math.min(policy.maxRoyaltyPct, Math.max(policy.minRoyaltyPct, royaltyPct));
+}
+
 /**
  * NM-EX concentrate procurement:
  * LME tin × NM-EX benchmark % × actual Sn assay %.
@@ -44,9 +50,18 @@ export function concentrateProcurementUsd(
 }
 
 export function royaltyUsd(
-  procurementUsd: number | null,
+  baseUsd: number | null,
   royaltyPct: number,
 ): number | null {
-  if (procurementUsd == null) return null;
-  return procurementUsd * (royaltyPct / 100);
+  if (baseUsd == null) return null;
+  return baseUsd * (royaltyPct / 100);
+}
+
+/** Unburdened price plus government royalty — the export / landed fiscal cost. */
+export function burdenedUsd(
+  baseUsd: number | null,
+  royaltyPct: number,
+): number | null {
+  if (baseUsd == null) return null;
+  return baseUsd * (1 + royaltyPct / 100);
 }

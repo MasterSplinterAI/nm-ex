@@ -5,5 +5,7 @@
   "defaultAssayPct": 70,
   "minAssayPct": 50,
   "maxAssayPct": 80,
-  "royaltyPct": 7.5
+  "royaltyPct": 7.5,
+  "minRoyaltyPct": 0,
+  "maxRoyaltyPct": 15
 }

@@ -45,6 +45,8 @@ export type TinPolicy = {
   defaultAssayPct: number;
   minAssayPct: number;
   maxAssayPct: number;
-  /** Government royalty on the procurement value, e.g. 7.5 */
+  /** Government royalty on the mineral value, e.g. 7.5 */
   royaltyPct: number;
+  minRoyaltyPct: number;
+  maxRoyaltyPct: number;
 };

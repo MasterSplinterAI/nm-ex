@@ -9,7 +9,7 @@ Public spot reference board for Nigeria's principal mineral exports, with USD pr
 - Full-bleed brand hero + live spot board
 - Minerals: **Tin** (99.9% Sn LME + 70% concentrate procurement desk), Copper, Aluminum, Lead, Zinc, Nickel, Gold, Tantalite
 - Tin concentrate: **Procurement = LME × NM-EX benchmark % × assay %** (benchmark starts at 70%, visible; assay seller-editable)
-- Government royalty shown separately at **7.5%**
+- Government royalty shown separately at **7.5%**, with a burdened export cost (price + royalty) on both refined tin and cassiterite
 - Open / Last / Close with **NGN on top**, USD underneath
 - Scrapers:
   - **metal.com** LME 3M: Tin, Copper, Aluminum, Lead, Zinc, Nickel
