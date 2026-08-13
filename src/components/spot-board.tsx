@@ -173,26 +173,38 @@ export function SpotBoardSection({ board, policy }: Props) {
                           />
                         </div>
                       ) : (
-                        <div className="grid grid-cols-1 gap-5 px-1 pb-5 sm:grid-cols-3 sm:gap-8 sm:px-3 sm:pb-8">
-                          <PriceBlock
-                            label={labels.open}
-                            usd={mineral.openUsd}
-                            ngn={toNgn(mineral.openUsd, board.fx.rate)}
-                            precise={precise}
-                          />
-                          <PriceBlock
-                            label={labels.last}
-                            usd={mineral.lastUsd}
-                            ngn={toNgn(mineral.lastUsd, board.fx.rate)}
-                            precise={precise}
-                            emphasize
-                          />
-                          <PriceBlock
-                            label={labels.close}
-                            usd={mineral.closeUsd}
-                            ngn={toNgn(mineral.closeUsd, board.fx.rate)}
-                            precise={precise}
-                          />
+                        <div className="px-1 pb-5 sm:px-3 sm:pb-8">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
+                            Last
+                          </p>
+                          <p className="mt-1 font-display text-3xl tracking-tight text-[var(--ink)] sm:text-4xl">
+                            {formatNgn(toNgn(mineral.lastUsd, board.fx.rate))}
+                          </p>
+                          <p className="mt-0.5 text-sm text-[var(--ink-muted)]">
+                            {formatUsd(mineral.lastUsd, precise)}
+                          </p>
+                          <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-[var(--ink-muted)]">
+                            <span>
+                              <span className="text-[10px] uppercase tracking-[0.14em]">
+                                {labels.open}{" "}
+                              </span>
+                              {formatNgn(toNgn(mineral.openUsd, board.fx.rate))}
+                              <span className="text-[var(--ink-muted)]/70">
+                                {" "}
+                                {formatUsd(mineral.openUsd, precise)}
+                              </span>
+                            </span>
+                            <span>
+                              <span className="text-[10px] uppercase tracking-[0.14em]">
+                                {labels.close}{" "}
+                              </span>
+                              {formatNgn(toNgn(mineral.closeUsd, board.fx.rate))}
+                              <span className="text-[var(--ink-muted)]/70">
+                                {" "}
+                                {formatUsd(mineral.closeUsd, precise)}
+                              </span>
+                            </span>
+                          </div>
                         </div>
                       )}
                     </motion.div>
@@ -204,42 +216,6 @@ export function SpotBoardSection({ board, policy }: Props) {
         </ul>
       </div>
     </section>
-  );
-}
-
-function PriceBlock({
-  label,
-  usd,
-  ngn,
-  precise = false,
-  emphasize = false,
-}: {
-  label: string;
-  usd: number | null;
-  ngn: number | null;
-  precise?: boolean;
-  emphasize?: boolean;
-}) {
-  return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">
-        {label}
-      </p>
-      <p
-        className={`mt-2 font-display tracking-tight text-[var(--ink)] ${
-          emphasize ? "text-3xl sm:text-4xl" : "text-2xl sm:text-3xl"
-        }`}
-      >
-        {formatNgn(ngn)}
-      </p>
-      <p
-        className={`mt-2 font-medium text-[var(--ink-muted)] ${
-          emphasize ? "text-base sm:text-lg" : "text-sm sm:text-base"
-        }`}
-      >
-        {formatUsd(usd, precise)}
-      </p>
-    </div>
   );
 }
 

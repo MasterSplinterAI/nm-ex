@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { MineralQuote, TinPolicy } from "@/lib/types";
 import {
@@ -59,114 +59,80 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
   );
 
   return (
-    <div className="space-y-4 sm:space-y-5">
+    <div className="space-y-5 sm:space-y-6">
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--forest)] sm:text-xs">
-          International benchmark · {tin.spec ?? "99.9% Sn"}
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--forest)]">
+          {tin.spec ?? "99.9% Sn"} · LME
         </p>
-        <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-8">
-          <PriceBlock
-            label="Open"
-            usd={tin.openUsd}
-            ngn={toNgn(tin.openUsd, fxRate)}
-          />
-          <PriceBlock
-            label="Last"
-            usd={tin.lastUsd}
-            ngn={toNgn(tin.lastUsd, fxRate)}
-            emphasize
-          />
-          <PriceBlock
-            label="Close"
-            usd={tin.closeUsd}
-            ngn={toNgn(tin.closeUsd, fxRate)}
-          />
+        <HeroQuote
+          label="Last"
+          usd={lme}
+          ngn={toNgn(lme, fxRate)}
+        />
+        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-[var(--ink-muted)]">
+          <QuietQuote label="Open" usd={tin.openUsd} ngn={toNgn(tin.openUsd, fxRate)} />
+          <QuietQuote label="Close" usd={tin.closeUsd} ngn={toNgn(tin.closeUsd, fxRate)} />
         </div>
-        <div className="mt-5 border-t border-[var(--line)] pt-4 sm:pt-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--copper)]">
-            Export burdened · last + {formatPct(royaltyRate, 1)} royalty
+        <div className="mt-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--copper)]">
+            Burdened · last + {formatPct(royaltyRate, 1)} royalty
           </p>
-          <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="font-display text-2xl tracking-tight text-[var(--ink)] sm:text-3xl">
-                {formatNgn(toNgn(refinedBurdened, fxRate))}
-              </p>
-              <p className="mt-1 text-sm font-medium text-[var(--ink-muted)]">
-                {formatUsd(refinedBurdened)}
-              </p>
-            </div>
-            <p className="max-w-xs text-xs leading-relaxed text-[var(--ink-muted)] sm:text-right">
-              LME last {formatUsd(lme)} + royalty {formatUsd(refinedRoyalty)}.
-              This is the all-in export reference a buyer should underwrite.
-            </p>
-          </div>
+          <p className="mt-1 font-display text-2xl tracking-tight text-[var(--ink)] sm:text-[1.75rem]">
+            {formatNgn(toNgn(refinedBurdened, fxRate))}
+          </p>
+          <p className="mt-0.5 text-sm text-[var(--ink-muted)]">
+            {formatUsd(refinedBurdened)}
+            <span className="mx-1.5 text-[var(--line)]">·</span>
+            royalty {formatUsd(refinedRoyalty)}
+          </p>
         </div>
       </div>
 
       <article
         id="concentrate"
-        className="border border-[var(--line)] bg-white/55 px-3 py-4 sm:px-6 sm:py-6"
+        className="border border-[var(--line)] bg-white/55 px-3 py-4 sm:px-6 sm:py-5"
       >
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--forest)] sm:text-xs">
-              NM-EX Nigerian procurement
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--forest)]">
+              NM-EX procurement
             </p>
-            <h3 className="mt-1 font-display text-2xl tracking-tight text-[var(--ink)] sm:text-3xl">
+            <h3 className="mt-1 font-display text-xl tracking-tight text-[var(--ink)] sm:text-2xl">
               Cassiterite
+              <span className="ml-2 align-middle text-sm font-sans font-medium text-[var(--ink-muted)]">
+                {policy.concentrateSpec}
+                {purityChanged ? ` → ${formatPct(assay, 1)}` : ""}
+              </span>
             </h3>
-            <p className="mt-1 text-sm text-[var(--ink-muted)]">
-              Tin concentrate · {policy.concentrateSpec}
-              {purityChanged ? ` · showing ${formatPct(assay, 1)} Sn` : ""}
-            </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Badge>
-              NM-EX {formatPct(policy.benchmarkPct, 1)} of LME
-            </Badge>
-            <Badge tone="copper">
-              Royalty {formatPct(royaltyRate, 1)}
-            </Badge>
-          </div>
+          <p className="text-xs text-[var(--ink-muted)]">
+            Benchmark {formatPct(policy.benchmarkPct, 1)} of LME
+          </p>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-4 sm:gap-8">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">
-              Indicative USD / t
-            </p>
-            <p className="mt-2 font-display text-2xl tracking-tight text-[var(--ink)] sm:text-3xl">
-              {formatUsd(procurement)}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">
-              Indicative ₦ / t
-            </p>
-            <p className="mt-2 font-display text-2xl tracking-tight text-[var(--ink)] sm:text-3xl">
-              {formatNgn(toNgn(procurement, fxRate))}
-            </p>
-          </div>
-        </div>
-
-        <p className="mt-3 text-xs leading-relaxed text-[var(--ink-muted)] sm:text-sm">
-          {formula}
-        </p>
+        <HeroQuote
+          label="Indicative"
+          usd={procurement}
+          ngn={toNgn(procurement, fxRate)}
+        />
+        <p className="mt-1 text-xs text-[var(--ink-muted)]">{formula}</p>
 
         <div className="mt-4 border-t border-[var(--line)] pt-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--copper)]">
-            Government royalty
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--copper)]">
+            Burdened export · cost + {formatPct(royaltyRate, 1)} royalty
           </p>
-          <p className="mt-1 text-xs text-[var(--ink-muted)] sm:text-sm">
-            Slide the official take to see why the export price sits above the
-            procurement rate — buyer cost, seller explanation, government
-            revenue.
+          <p className="mt-1 font-display text-2xl tracking-tight text-[var(--ink)] sm:text-[1.75rem]">
+            {formatNgn(toNgn(concentrateBurdened, fxRate))}
           </p>
-          <label className="mt-3 block">
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">
-              Royalty · % of value
-            </span>
-            <div className="mt-2 flex items-center gap-3">
+          <p className="mt-0.5 text-sm text-[var(--ink-muted)]">
+            {formatUsd(concentrateBurdened)}
+            <span className="mx-1.5 text-[var(--line)]">·</span>
+            royalty {formatUsd(concentrateRoyalty)}
+          </p>
+
+          <label className="mt-4 block">
+            <span className="text-xs text-[var(--ink-muted)]">Royalty %</span>
+            <div className="mt-1.5 flex items-center gap-3">
               <input
                 type="range"
                 min={policy.minRoyaltyPct}
@@ -176,7 +142,7 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
                 onChange={(event) =>
                   setRoyaltyPct(Number.parseFloat(event.target.value))
                 }
-                className="h-11 w-full accent-[var(--copper)]"
+                className="h-10 w-full accent-[var(--copper)]"
                 aria-label="Government royalty percent"
               />
               <input
@@ -190,50 +156,18 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
                   const next = Number.parseFloat(event.target.value);
                   if (Number.isFinite(next)) setRoyaltyPct(next);
                 }}
-                className="h-11 w-[4.75rem] shrink-0 border border-[var(--line)] bg-white px-2 text-center text-base font-semibold text-[var(--ink)]"
+                className="h-10 w-[4.25rem] shrink-0 border border-[var(--line)] bg-white px-2 text-center text-sm text-[var(--ink)]"
                 aria-label="Government royalty percent numeric"
               />
             </div>
-            <p className="mt-1 text-xs text-[var(--ink-muted)]">
-              Default {formatPct(policy.royaltyPct, 1)} · {policy.minRoyaltyPct}–
-              {policy.maxRoyaltyPct}%
-            </p>
           </label>
-
-          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
-                Royalty
-              </p>
-              <p className="mt-1 font-display text-xl text-[var(--ink)] sm:text-2xl">
-                {formatNgn(toNgn(concentrateRoyalty, fxRate))}
-              </p>
-              <p className="mt-0.5 text-xs text-[var(--ink-muted)] sm:text-sm">
-                {formatUsd(concentrateRoyalty)}
-              </p>
-            </div>
-            <div className="col-span-2 sm:col-span-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--copper)]">
-                Burdened export · cost + royalty
-              </p>
-              <p className="mt-1 font-display text-2xl tracking-tight text-[var(--ink)] sm:text-3xl">
-                {formatNgn(toNgn(concentrateBurdened, fxRate))}
-              </p>
-              <p className="mt-0.5 text-sm font-medium text-[var(--ink-muted)]">
-                {formatUsd(concentrateBurdened)}
-              </p>
-              <p className="mt-1 text-xs text-[var(--ink-muted)]">
-                {formatUsd(procurement)} + {formatUsd(concentrateRoyalty)}
-              </p>
-            </div>
-          </div>
         </div>
 
         <button
           type="button"
           aria-expanded={purityOpen}
           onClick={() => setPurityOpen((open) => !open)}
-          className="mt-4 inline-flex min-h-11 w-full items-center justify-between border border-[var(--ink)]/15 bg-white px-4 py-3 text-left text-sm font-semibold text-[var(--ink)] touch-manipulation sm:w-auto sm:min-w-[16rem]"
+          className="mt-4 inline-flex min-h-10 w-full items-center justify-between border border-[var(--ink)]/12 bg-white px-3 py-2.5 text-left text-sm text-[var(--ink)] touch-manipulation sm:w-auto sm:min-w-[14rem]"
         >
           <span>{purityOpen ? "Hide purity" : "Adjust purity"}</span>
           <span
@@ -255,11 +189,11 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               className="overflow-hidden"
             >
-              <label className="mt-4 block">
-                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">
+              <label className="mt-3 block">
+                <span className="text-xs text-[var(--ink-muted)]">
                   Seller assay · % Sn
                 </span>
-                <div className="mt-2 flex items-center gap-3">
+                <div className="mt-1.5 flex items-center gap-3">
                   <input
                     type="range"
                     min={policy.minAssayPct}
@@ -269,7 +203,7 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
                     onChange={(event) =>
                       setAssayPct(Number.parseFloat(event.target.value))
                     }
-                    className="h-11 w-full accent-[var(--forest)]"
+                    className="h-10 w-full accent-[var(--forest)]"
                     aria-label="Tin assay percent"
                   />
                   <input
@@ -283,28 +217,24 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
                       const next = Number.parseFloat(event.target.value);
                       if (Number.isFinite(next)) setAssayPct(next);
                     }}
-                    className="h-11 w-[4.75rem] shrink-0 border border-[var(--line)] bg-white px-2 text-center text-base font-semibold text-[var(--ink)]"
+                    className="h-10 w-[4.25rem] shrink-0 border border-[var(--line)] bg-white px-2 text-center text-sm text-[var(--ink)]"
                     aria-label="Tin assay percent numeric"
                   />
                 </div>
-                <p className="mt-1 text-xs text-[var(--ink-muted)]">
-                  {policy.minAssayPct}–{policy.maxAssayPct}% · default{" "}
-                  {formatPct(policy.defaultAssayPct, 0)}
-                </p>
               </label>
             </motion.div>
           )}
         </AnimatePresence>
       </article>
 
-      <ol className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
+      <ol className="flex gap-1.5 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
         {FLOW.map((step, index) => (
-          <li key={step} className="flex shrink-0 items-center gap-2">
-            <span className="border border-[var(--line)] bg-white/70 px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--ink)] sm:text-xs">
+          <li key={step} className="flex shrink-0 items-center gap-1.5">
+            <span className="text-[10px] uppercase tracking-[0.12em] text-[var(--ink-muted)]">
               {step}
             </span>
             {index < FLOW.length - 1 && (
-              <span className="text-[var(--ink-muted)]" aria-hidden>
+              <span className="text-[var(--ink-muted)]/50" aria-hidden>
                 →
               </span>
             )}
@@ -315,56 +245,42 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
   );
 }
 
-function Badge({
-  children,
-  tone = "forest",
-}: {
-  children: ReactNode;
-  tone?: "forest" | "copper";
-}) {
-  const color =
-    tone === "copper"
-      ? "text-[var(--copper)] border-[var(--copper)]/30"
-      : "text-[var(--forest)] border-[var(--forest)]/25";
-  return (
-    <span
-      className={`inline-flex items-center border bg-white/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] sm:text-xs ${color}`}
-    >
-      {children}
-    </span>
-  );
-}
-
-function PriceBlock({
+function HeroQuote({
   label,
   usd,
   ngn,
-  emphasize = false,
 }: {
   label: string;
   usd: number | null;
   ngn: number | null;
-  emphasize?: boolean;
 }) {
   return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">
+    <div className="mt-3">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
         {label}
       </p>
-      <p
-        className={`mt-1.5 font-display tracking-tight text-[var(--ink)] ${
-          emphasize ? "text-3xl sm:text-4xl" : "text-2xl sm:text-3xl"
-        }`}
-      >
+      <p className="mt-1 font-display text-3xl tracking-tight text-[var(--ink)] sm:text-4xl">
         {formatNgn(ngn)}
       </p>
-      <p
-        className={`mt-1 font-medium text-[var(--ink-muted)] ${
-          emphasize ? "text-base sm:text-lg" : "text-sm sm:text-base"
-        }`}
-      >
-        {formatUsd(usd)}
-      </p>
+      <p className="mt-0.5 text-sm text-[var(--ink-muted)]">{formatUsd(usd)}</p>
     </div>
+  );
+}
+
+function QuietQuote({
+  label,
+  usd,
+  ngn,
+}: {
+  label: string;
+  usd: number | null;
+  ngn: number | null;
+}) {
+  return (
+    <span>
+      <span className="text-[10px] uppercase tracking-[0.14em]">{label} </span>
+      {formatNgn(ngn)}
+      <span className="text-[var(--ink-muted)]/70"> {formatUsd(usd)}</span>
+    </span>
   );
 }
