@@ -197,8 +197,8 @@ function InclRoyalty({
   caption = "Including government royalty",
 }: {
   rate: number;
-  burdenedUsd: number;
-  royaltyAmountUsd: number;
+  burdenedUsd: number | null;
+  royaltyAmountUsd: number | null;
   fxRate: number;
   caption?: string;
 }) {
