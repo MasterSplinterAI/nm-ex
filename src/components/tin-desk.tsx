@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import type { MineralQuote, TinPolicy } from "@/lib/types";
 import {
   burdenedUsd,
@@ -34,7 +33,6 @@ type Props = {
 
 export function TinDesk({ tin, fxRate, policy }: Props) {
   const [assayPct, setAssayPct] = useState(policy.defaultAssayPct);
-  const [purityOpen, setPurityOpen] = useState(false);
 
   const assay = clampAssay(assayPct, policy);
   const royaltyRate = policy.royaltyPct;
@@ -71,19 +69,12 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
           <QuietQuote label="Open" usd={tin.openUsd} ngn={toNgn(tin.openUsd, fxRate)} />
           <QuietQuote label="Close" usd={tin.closeUsd} ngn={toNgn(tin.closeUsd, fxRate)} />
         </div>
-        <div className="mt-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--copper)]">
-            Burdened · last + {formatPct(royaltyRate, 1)} royalty
-          </p>
-          <p className="mt-1 font-display text-2xl tracking-tight text-[var(--ink)] sm:text-[1.75rem]">
-            {formatNgn(toNgn(refinedBurdened, fxRate))}
-          </p>
-          <p className="mt-0.5 text-sm text-[var(--ink-muted)]">
-            {formatUsd(refinedBurdened)}
-            <span className="mx-1.5 text-[var(--line)]">·</span>
-            royalty {formatUsd(refinedRoyalty)}
-          </p>
-        </div>
+        <InclRoyalty
+          rate={royaltyRate}
+          burdenedUsd={refinedBurdened}
+          royaltyAmountUsd={refinedRoyalty}
+          fxRate={fxRate}
+        />
       </div>
 
       <article
@@ -108,6 +99,40 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
           </p>
         </div>
 
+        <label className="mt-4 block">
+          <span className="text-sm font-medium text-[var(--ink)]">
+            Cassiterite purity · % Sn
+          </span>
+          <div className="mt-1.5 flex items-center gap-3">
+            <input
+              type="range"
+              min={policy.minAssayPct}
+              max={policy.maxAssayPct}
+              step={0.5}
+              value={assay}
+              onChange={(event) =>
+                setAssayPct(Number.parseFloat(event.target.value))
+              }
+              className="h-10 w-full accent-[var(--forest)]"
+              aria-label="Tin assay percent"
+            />
+            <input
+              type="number"
+              inputMode="decimal"
+              min={policy.minAssayPct}
+              max={policy.maxAssayPct}
+              step={0.5}
+              value={assay}
+              onChange={(event) => {
+                const next = Number.parseFloat(event.target.value);
+                if (Number.isFinite(next)) setAssayPct(next);
+              }}
+              className="h-10 w-[4.25rem] shrink-0 border border-[var(--line)] bg-white px-2 text-center text-sm text-[var(--ink)]"
+              aria-label="Tin assay percent numeric"
+            />
+          </div>
+        </label>
+
         <HeroQuote
           label="Indicative"
           usd={procurement}
@@ -115,82 +140,13 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
         />
         <p className="mt-1 text-xs text-[var(--ink-muted)]">{formula}</p>
 
-        <div className="mt-4 border-t border-[var(--line)] pt-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--copper)]">
-            Burdened export · cost + {formatPct(royaltyRate, 1)} royalty
-          </p>
-          <p className="mt-1 font-display text-2xl tracking-tight text-[var(--ink)] sm:text-[1.75rem]">
-            {formatNgn(toNgn(concentrateBurdened, fxRate))}
-          </p>
-          <p className="mt-0.5 text-sm text-[var(--ink-muted)]">
-            {formatUsd(concentrateBurdened)}
-            <span className="mx-1.5 text-[var(--line)]">·</span>
-            royalty {formatUsd(concentrateRoyalty)}
-          </p>
-        </div>
-
-        <button
-          type="button"
-          aria-expanded={purityOpen}
-          onClick={() => setPurityOpen((open) => !open)}
-          className="mt-4 inline-flex min-h-10 w-full items-center justify-between border border-[var(--ink)]/12 bg-white px-3 py-2.5 text-left text-sm text-[var(--ink)] touch-manipulation sm:w-auto sm:min-w-[14rem]"
-        >
-          <span>{purityOpen ? "Hide purity" : "Adjust purity"}</span>
-          <span
-            className={`ml-6 text-xs text-[var(--ink-muted)] transition ${
-              purityOpen ? "rotate-180" : ""
-            }`}
-            aria-hidden
-          >
-            ▾
-          </span>
-        </button>
-
-        <AnimatePresence initial={false}>
-          {purityOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-              className="overflow-hidden"
-            >
-              <label className="mt-3 block">
-                <span className="text-xs text-[var(--ink-muted)]">
-                  Seller assay · % Sn
-                </span>
-                <div className="mt-1.5 flex items-center gap-3">
-                  <input
-                    type="range"
-                    min={policy.minAssayPct}
-                    max={policy.maxAssayPct}
-                    step={0.5}
-                    value={assay}
-                    onChange={(event) =>
-                      setAssayPct(Number.parseFloat(event.target.value))
-                    }
-                    className="h-10 w-full accent-[var(--forest)]"
-                    aria-label="Tin assay percent"
-                  />
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    min={policy.minAssayPct}
-                    max={policy.maxAssayPct}
-                    step={0.5}
-                    value={assay}
-                    onChange={(event) => {
-                      const next = Number.parseFloat(event.target.value);
-                      if (Number.isFinite(next)) setAssayPct(next);
-                    }}
-                    className="h-10 w-[4.25rem] shrink-0 border border-[var(--line)] bg-white px-2 text-center text-sm text-[var(--ink)]"
-                    aria-label="Tin assay percent numeric"
-                  />
-                </div>
-              </label>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <InclRoyalty
+          rate={royaltyRate}
+          burdenedUsd={concentrateBurdened}
+          royaltyAmountUsd={concentrateRoyalty}
+          fxRate={fxRate}
+          caption="Burdened export"
+        />
       </article>
 
       <ol className="flex gap-1.5 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
@@ -229,6 +185,41 @@ function HeroQuote({
         {formatNgn(ngn)}
       </p>
       <p className="mt-0.5 text-sm text-[var(--ink-muted)]">{formatUsd(usd)}</p>
+    </div>
+  );
+}
+
+function InclRoyalty({
+  rate,
+  burdenedUsd,
+  royaltyAmountUsd,
+  fxRate,
+  caption = "Including government royalty",
+}: {
+  rate: number;
+  burdenedUsd: number;
+  royaltyAmountUsd: number;
+  fxRate: number;
+  caption?: string;
+}) {
+  return (
+    <div className="mt-4 border border-[var(--copper)]/30 bg-[rgb(143_106_69/0.07)] px-3 py-3 sm:px-4 sm:py-4">
+      <p className="text-sm font-semibold text-[var(--copper)] sm:text-base">
+        {caption} · {formatPct(rate, 1)}
+      </p>
+      <p className="mt-1 font-display text-2xl tracking-tight text-[var(--ink)] sm:text-3xl">
+        {formatNgn(toNgn(burdenedUsd, fxRate))}
+      </p>
+      <p className="mt-0.5 text-base text-[var(--ink)]">
+        {formatUsd(burdenedUsd)}
+      </p>
+      <p className="mt-2 text-sm text-[var(--ink)] sm:text-base">
+        Royalty {formatNgn(toNgn(royaltyAmountUsd, fxRate))}
+        <span className="text-[var(--ink-muted)]">
+          {" "}
+          · {formatUsd(royaltyAmountUsd)}
+        </span>
+      </p>
     </div>
   );
 }
