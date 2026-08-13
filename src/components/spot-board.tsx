@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { LiveClock } from "@/components/live-clock";
 import { TinDesk } from "@/components/tin-desk";
 import { MINERALS } from "@/lib/minerals";
 import type { MineralQuote, MineralSlug, SpotBoard, TinPolicy } from "@/lib/types";
@@ -75,9 +74,6 @@ export function SpotBoardSection({ board, policy }: Props) {
           </div>
           <div className="text-sm text-[var(--ink-muted)] sm:text-right">
             <p>
-              <LiveClock className="text-base font-medium text-[var(--ink)] sm:text-lg" />
-            </p>
-            <p className="mt-1">
               USD/NGN{" "}
               <span className="font-semibold text-[var(--ink)]">
                 {formatFxRate(board.fx.rate)}
