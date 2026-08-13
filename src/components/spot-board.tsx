@@ -65,11 +65,8 @@ export function SpotBoardSection({ board, policy }: Props) {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-10 sm:py-14">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--forest)] sm:text-xs">
+            <h2 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--forest)] sm:text-xs">
               Spot board
-            </p>
-            <h2 className="mt-2 font-display text-3xl tracking-tight text-[var(--ink)] sm:text-5xl">
-              Open · Last · Close
             </h2>
             <p className="mt-2 max-w-lg text-sm text-[var(--ink-muted)] sm:text-base">
               Tap a mineral to expand. Tin includes cassiterite procurement.
@@ -109,11 +106,6 @@ export function SpotBoardSection({ board, policy }: Props) {
                 >
                   <div className="flex items-start justify-between gap-3 sm:items-center sm:gap-4">
                     <div className="min-w-0">
-                      {isTin && (
-                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--forest)]">
-                          Primary export
-                        </p>
-                      )}
                       <p
                         className={`font-display tracking-tight text-[var(--ink)] ${
                           open ? "text-2xl sm:text-4xl" : "text-xl sm:text-2xl"
