@@ -6,7 +6,6 @@ import type { MineralQuote, TinPolicy } from "@/lib/types";
 import {
   burdenedUsd,
   clampAssay,
-  clampRoyalty,
   concentrateProcurementUsd,
   royaltyUsd,
 } from "@/lib/policy";
@@ -35,11 +34,10 @@ type Props = {
 
 export function TinDesk({ tin, fxRate, policy }: Props) {
   const [assayPct, setAssayPct] = useState(policy.defaultAssayPct);
-  const [royaltyPct, setRoyaltyPct] = useState(policy.royaltyPct);
   const [purityOpen, setPurityOpen] = useState(false);
 
   const assay = clampAssay(assayPct, policy);
-  const royaltyRate = clampRoyalty(royaltyPct, policy);
+  const royaltyRate = policy.royaltyPct;
   const lme = tin.lastUsd;
   const procurement = concentrateProcurementUsd(
     lme,
@@ -129,38 +127,6 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
             <span className="mx-1.5 text-[var(--line)]">·</span>
             royalty {formatUsd(concentrateRoyalty)}
           </p>
-
-          <label className="mt-4 block">
-            <span className="text-xs text-[var(--ink-muted)]">Royalty %</span>
-            <div className="mt-1.5 flex items-center gap-3">
-              <input
-                type="range"
-                min={policy.minRoyaltyPct}
-                max={policy.maxRoyaltyPct}
-                step={0.5}
-                value={royaltyRate}
-                onChange={(event) =>
-                  setRoyaltyPct(Number.parseFloat(event.target.value))
-                }
-                className="h-10 w-full accent-[var(--copper)]"
-                aria-label="Government royalty percent"
-              />
-              <input
-                type="number"
-                inputMode="decimal"
-                min={policy.minRoyaltyPct}
-                max={policy.maxRoyaltyPct}
-                step={0.5}
-                value={royaltyRate}
-                onChange={(event) => {
-                  const next = Number.parseFloat(event.target.value);
-                  if (Number.isFinite(next)) setRoyaltyPct(next);
-                }}
-                className="h-10 w-[4.25rem] shrink-0 border border-[var(--line)] bg-white px-2 text-center text-sm text-[var(--ink)]"
-                aria-label="Government royalty percent numeric"
-              />
-            </div>
-          </label>
         </div>
 
         <button
