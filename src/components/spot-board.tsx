@@ -136,7 +136,7 @@ export function SpotBoardSection({ board, policy }: Props) {
                         </div>
                       )}
                       <span
-                        className={`mt-0.5 inline-flex items-center gap-1.5 border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${
+                        className={`mt-0.5 inline-flex min-h-8 items-center gap-1.5 border px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] ${
                           open
                             ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]"
                             : "border-[var(--line)] bg-white text-[var(--ink)]"

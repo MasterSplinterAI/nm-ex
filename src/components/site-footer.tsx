@@ -1,7 +1,7 @@
 export function SiteFooter() {
   return (
     <footer className="border-t border-[var(--line)] bg-[var(--ink)] text-[var(--paper)]">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-12 sm:flex-row sm:items-end sm:justify-between sm:px-10">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-12 pb-[max(3rem,env(safe-area-inset-bottom))] sm:flex-row sm:items-end sm:justify-between sm:px-10">
         <div>
           <p className="font-display text-3xl tracking-tight">NM-EX</p>
           <p className="mt-2 max-w-sm text-sm leading-relaxed text-white/70">

@@ -10,6 +10,13 @@ const time = new Intl.DateTimeFormat("en-GB", {
   hour12: false,
 });
 
+const timeShort = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Africa/Lagos",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
 type Props = {
   className?: string;
 };
@@ -30,7 +37,14 @@ export function LiveClock({ className = "" }: Props) {
       title="West Africa Time · Lagos"
       className={`tabular-nums ${className}`.trim()}
     >
-      {now ? `${time.format(now)} WAT` : "—:—:— WAT"}
+      {now ? (
+        <>
+          <span className="sm:hidden">{timeShort.format(now)} WAT</span>
+          <span className="hidden sm:inline">{time.format(now)} WAT</span>
+        </>
+      ) : (
+        <>—:— WAT</>
+      )}
     </time>
   );
 }

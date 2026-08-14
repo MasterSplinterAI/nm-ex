@@ -11,16 +11,16 @@ export function SiteHeader() {
         >
           NM-EX
         </a>
-        <div className="flex items-center gap-3 sm:gap-5">
-          <nav className="flex items-center gap-3 text-xs text-[var(--ink-muted)] sm:gap-5 sm:text-sm">
-            <a href="#spot" className="transition hover:text-[var(--ink)]">
+        <div className="flex items-center gap-2.5 sm:gap-5">
+          <nav className="flex items-center gap-2.5 text-xs text-[var(--ink-muted)] sm:gap-5 sm:text-sm">
+            <a href="#spot" className="min-h-10 inline-flex items-center transition hover:text-[var(--ink)]">
               Spot
             </a>
-            <a href="#tin" className="transition hover:text-[var(--ink)]">
+            <a href="#tin" className="min-h-10 inline-flex items-center transition hover:text-[var(--ink)]">
               Tin
             </a>
-            <span className="text-[var(--ink)]/35">|</span>
-            <LiveClock className="text-[var(--ink)]" />
+            <span className="hidden text-[var(--ink)]/35 min-[380px]:inline">|</span>
+            <LiveClock className="hidden text-[var(--ink)] min-[380px]:inline" />
           </nav>
           <div className="flex items-center gap-2 border border-[var(--ink)]/15 bg-[var(--paper)]/70 px-2 py-1 backdrop-blur-sm sm:gap-2.5 sm:px-2.5 sm:py-1.5">
             <NigeriaFlag className="h-4 w-6 shrink-0 shadow-sm sm:h-5 sm:w-[30px]" />

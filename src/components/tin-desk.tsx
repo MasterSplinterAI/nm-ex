@@ -175,7 +175,7 @@ function HeroQuote({
       <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
         {label}
       </p>
-      <p className="mt-1 font-display text-3xl tracking-tight text-[var(--ink)] sm:text-4xl">
+      <p className="mt-1 break-words font-display text-3xl tracking-tight text-[var(--ink)] sm:text-4xl">
         {formatNgn(ngn)}
       </p>
       <p className="mt-0.5 text-sm text-[var(--ink-muted)]">{formatUsd(usd)}</p>

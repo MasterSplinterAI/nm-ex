@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { logoutDesk } from "@/app/desk/actions";
 import { LiveClock } from "@/components/live-clock";
 import {
@@ -95,8 +95,15 @@ export function TraceDesk({ prices }: Props) {
     setNavOpen(false);
   }
 
+  useEffect(() => {
+    document.body.style.overflow = navOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [navOpen]);
+
   return (
-    <div className="flex min-h-full">
+    <div className="flex min-h-dvh min-w-0 overflow-x-clip">
       {navOpen && (
         <button
           type="button"
@@ -108,7 +115,7 @@ export function TraceDesk({ prices }: Props) {
 
       <aside
         id="desk-nav"
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-[var(--line)] bg-white transition-transform lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[min(18rem,88vw)] flex-col border-r border-[var(--line)] bg-white pt-[env(safe-area-inset-top)] transition-transform lg:static lg:w-64 lg:translate-x-0 ${
           navOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -124,7 +131,7 @@ export function TraceDesk({ prices }: Props) {
           </p>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-2 py-4" aria-label="Desk">
+        <nav className="flex-1 overflow-y-auto overscroll-contain px-2 py-4" aria-label="Desk">
           {NAV_GROUPS.map((group) => (
             <div key={group.label} className="mb-5">
               <p className="px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
@@ -136,7 +143,7 @@ export function TraceDesk({ prices }: Props) {
                     <button
                       type="button"
                       onClick={() => go(item.id)}
-                      className={`flex w-full items-center justify-between px-2 py-2 text-left text-sm ${
+                      className={`flex min-h-11 w-full items-center justify-between px-2 text-left text-sm ${
                         tab === item.id
                           ? "bg-[var(--ink)] text-[var(--paper)]"
                           : "text-[var(--ink)] hover:bg-[var(--ink)]/[0.04]"
@@ -162,23 +169,23 @@ export function TraceDesk({ prices }: Props) {
           ))}
         </nav>
 
-        <div className="border-t border-[var(--line)] px-4 py-3 text-xs text-[var(--ink-muted)]">
+        <div className="border-t border-[var(--line)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-xs text-[var(--ink-muted)]">
           <p>A. Bello · FMSMD inspector</p>
           <p className="mt-0.5">Jos minerals desk</p>
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-[var(--line)] bg-white px-3 py-2.5 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-[var(--line)] bg-white px-3 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] sm:gap-3 sm:px-6 sm:py-2.5">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <button
               type="button"
-              className="flex h-10 w-10 items-center justify-center border border-[var(--line)] text-[var(--ink)] lg:hidden"
+              className="flex h-11 w-11 shrink-0 items-center justify-center border border-[var(--line)] text-[var(--ink)] lg:hidden"
               aria-expanded={navOpen}
               aria-controls="desk-nav"
               onClick={() => setNavOpen((open) => !open)}
             >
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{navOpen ? "Close menu" : "Open menu"}</span>
               <span aria-hidden className="flex flex-col gap-1">
                 <span className="block h-0.5 w-4 bg-current" />
                 <span className="block h-0.5 w-4 bg-current" />
@@ -189,25 +196,28 @@ export function TraceDesk({ prices }: Props) {
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
                 {page.kicker}
               </p>
-              <h1 className="truncate font-display text-xl tracking-tight text-[var(--ink)] sm:text-2xl">
+              <h1 className="truncate font-display text-lg tracking-tight text-[var(--ink)] sm:text-2xl">
                 {page.title}
               </h1>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-4 text-sm text-[var(--ink-muted)]">
-            <LiveClock className="hidden text-[var(--ink)] sm:inline" />
-            <a href="/" className="hover:text-[var(--ink)]">
+          <div className="flex shrink-0 items-center gap-3 text-sm text-[var(--ink-muted)] sm:gap-4">
+            <LiveClock className="hidden text-[var(--ink)] md:inline" />
+            <a href="/" className="inline-flex min-h-11 items-center hover:text-[var(--ink)]">
               Board
             </a>
             <form action={logoutDesk}>
-              <button type="submit" className="hover:text-[var(--ink)]">
+              <button
+                type="submit"
+                className="inline-flex min-h-11 items-center hover:text-[var(--ink)]"
+              >
                 Sign out
               </button>
             </form>
           </div>
         </header>
 
-        <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">
+        <main className="min-w-0 flex-1 overflow-x-clip px-4 py-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8 sm:py-8">
           {tab === "guide" && <GuideTab prices={prices} onOpen={go} />}
           {tab === "impact" && <ImpactTab prices={prices} />}
           {tab === "registry" && <RegistryTab prices={prices} />}
@@ -279,7 +289,7 @@ function GuideTab({
         <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
           The chain
         </p>
-        <ol className="mt-3 grid gap-px border border-[var(--line)] bg-[var(--line)] sm:grid-cols-5">
+        <ol className="mt-3 grid gap-px border border-[var(--line)] bg-[var(--line)] lg:grid-cols-5">
           {chain.map((step, index) => (
             <li key={step.name} className="bg-white px-4 py-4">
               <p className="text-xs tabular-nums text-[var(--ink-muted)]">
@@ -401,7 +411,7 @@ function ConcessionsTab({ onOpenLot }: { onOpenLot: () => void }) {
         has no licence — those tonnes are invisible until a shed weighs them
         in. Display figures only.
       </p>
-      <div className="overflow-x-auto border border-[var(--line)] bg-white">
+      <div className="-mx-4 overflow-x-auto border-y border-[var(--line)] bg-white sm:mx-0 sm:border">
         <table className="w-full min-w-[40rem] text-sm">
           <thead>
             <tr className="border-b border-[var(--line)] text-left text-xs text-[var(--ink-muted)]">
@@ -683,12 +693,15 @@ function LossCard({
       >
         {label}
       </p>
-      <p className="mt-3 font-display text-3xl tracking-tight text-[var(--ink)] sm:text-4xl">
+      <p className="mt-3 break-words font-display text-2xl tracking-tight text-[var(--ink)] sm:text-4xl">
         {formatNgn(toNgn(annualUsd, fxRate))}
       </p>
-      <p className="mt-1 text-[var(--ink-muted)]">
-        {formatUsd(annualUsd)} a year ·{" "}
-        {formatNgn(toNgn(monthlyUsd, fxRate))} a month
+      <p className="mt-1 break-words text-sm text-[var(--ink-muted)] sm:text-base">
+        {formatUsd(annualUsd)} a year
+        <span className="block sm:inline">
+          <span className="hidden sm:inline"> · </span>
+          {formatNgn(toNgn(monthlyUsd, fxRate))} a month
+        </span>
       </p>
       <p className="mt-3 text-sm leading-relaxed text-[var(--ink-muted)]">
         {detail}
@@ -723,7 +736,7 @@ function ScenarioCard({
         {label}
       </p>
       <p className="mt-1 text-sm text-[var(--ink-muted)]">{volume}</p>
-      <p className="mt-3 font-display text-2xl tracking-tight text-[var(--ink)]">
+      <p className="mt-3 break-words font-display text-xl tracking-tight text-[var(--ink)] sm:text-2xl">
         {formatNgn(toNgn(take.annualRoyalty, fxRate))}
       </p>
       <p className="text-sm text-[var(--ink-muted)]">
@@ -807,8 +820,30 @@ function RegistryTab({ prices }: { prices: TracePrices }) {
         posted at the furnace.
       </p>
 
-      <div className="grid gap-8 lg:grid-cols-[17rem_minmax(0,1fr)]">
-        <aside className="space-y-5">
+      <div className="grid gap-6 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-8">
+        <div className="-mx-4 overflow-x-auto px-4 lg:hidden">
+          <div className="flex gap-2 pb-1">
+            {ENTITIES.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setSelectedId(item.id)}
+                className={`shrink-0 border px-3 py-2 text-left text-sm ${
+                  item.id === entity.id
+                    ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]"
+                    : "border-[var(--line)] bg-white text-[var(--ink)]"
+                }`}
+              >
+                <span className="block font-medium">{item.name}</span>
+                <span className="block text-xs opacity-70">
+                  {roleLabel(item.role)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <aside className="hidden space-y-5 lg:block">
           {ROLE_ORDER.map((role) => (
             <div key={role}>
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
@@ -855,7 +890,7 @@ function RegistryTab({ prices }: { prices: TracePrices }) {
             <span className="text-sm text-[var(--forest)]">Registered</span>
           </div>
 
-          <div className="mt-6 grid gap-4 border-y border-[var(--line)] py-4 sm:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-4 border-y border-[var(--line)] py-4 sm:grid-cols-4">
             <Fact
               label="Lots touched"
               value={String(lotCount)}
@@ -986,8 +1021,30 @@ function LotsTab({ prices }: { prices: TracePrices }) {
         Concentrate cannot be exported on this book.
       </p>
 
-      <div className="grid gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
-        <aside>
+      <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8">
+        <div className="-mx-4 overflow-x-auto px-4 lg:hidden">
+          <div className="flex gap-2 pb-1">
+            {seed.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setSelectedId(item.id)}
+                className={`shrink-0 border px-3 py-2 text-left text-sm ${
+                  item.id === lot.id
+                    ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]"
+                    : "border-[var(--line)] bg-white text-[var(--ink)]"
+                }`}
+              >
+                <span className="block font-mono text-xs">{item.id}</span>
+                <span className="block text-xs opacity-70">
+                  {statusLabel(item.status)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <aside className="hidden lg:block">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
             Lots
           </p>
@@ -1410,7 +1467,7 @@ function Fact({
   return (
     <div>
       <p className="text-xs text-[var(--ink-muted)]">{label}</p>
-      <p className="mt-1 font-display text-xl tracking-tight text-[var(--ink)]">
+      <p className="mt-1 break-words font-display text-lg tracking-tight text-[var(--ink)] sm:text-xl">
         {value}
       </p>
       <p className="mt-0.5 text-sm text-[var(--ink-muted)]">{hint}</p>
