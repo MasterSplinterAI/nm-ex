@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { logoutDesk } from "@/app/desk/actions";
+import { LiveClock } from "@/components/live-clock";
 import {
   DEMO_LOT_ID,
   DEMO_LOT_T,
@@ -32,7 +34,13 @@ type Props = {
   prices: TracePrices;
 };
 
-type Tab = "guide" | "impact" | "registry" | "lots";
+type Tab =
+  | "guide"
+  | "impact"
+  | "registry"
+  | "lots"
+  | "concessions"
+  | "alerts";
 type Counterparty = "buyer" | "refiner";
 type DemoStep = "shed" | "paid" | "refined";
 
@@ -45,71 +53,175 @@ const timeFmt = new Intl.DateTimeFormat("en-NG", {
   hour12: false,
 });
 
+const NAV_GROUPS: { label: string; items: { id: Tab; label: string; badge?: string }[] }[] =
+  [
+    {
+      label: "Overview",
+      items: [
+        { id: "guide", label: "Framework" },
+        { id: "impact", label: "Lost revenue" },
+      ],
+    },
+    {
+      label: "Custody",
+      items: [
+        { id: "registry", label: "Registry" },
+        { id: "lots", label: "Lot book" },
+        { id: "concessions", label: "Concessions" },
+      ],
+    },
+    {
+      label: "Compliance",
+      items: [{ id: "alerts", label: "Exceptions", badge: "2" }],
+    },
+  ];
+
+const PAGE_TITLE: Record<Tab, { kicker: string; title: string }> = {
+  guide: { kicker: "Overview", title: "Framework" },
+  impact: { kicker: "Overview", title: "Lost revenue" },
+  registry: { kicker: "Custody", title: "Participant registry" },
+  lots: { kicker: "Custody", title: "Lot book" },
+  concessions: { kicker: "Custody", title: "Mining concessions" },
+  alerts: { kicker: "Compliance", title: "Exceptions" },
+};
+
 export function TraceDesk({ prices }: Props) {
-  const [tab, setTab] = useState<Tab>("guide");
+  const [tab, setTab] = useState<Tab>("registry");
+  const [navOpen, setNavOpen] = useState(false);
+  const page = PAGE_TITLE[tab];
+
+  function go(next: Tab) {
+    setTab(next);
+    setNavOpen(false);
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--forest)]">
-            NM-EX Trace
+    <div className="flex min-h-full">
+      {navOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-[var(--ink)]/30 lg:hidden"
+          aria-label="Close menu"
+          onClick={() => setNavOpen(false)}
+        />
+      )}
+
+      <aside
+        id="desk-nav"
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-[var(--line)] bg-white transition-transform lg:static lg:translate-x-0 ${
+          navOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="border-b border-[var(--line)] px-4 py-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--forest)]">
+            FMSMD
           </p>
-          <h1 className="mt-1 font-display text-2xl tracking-tight text-[var(--ink)] sm:text-3xl">
-            Tin custody &amp; revenue
-          </h1>
+          <p className="mt-1 font-display text-lg tracking-tight text-[var(--ink)]">
+            National tin trace
+          </p>
+          <p className="mt-1 text-xs text-[var(--ink-muted)]">
+            NTS-TIN · simulation
+          </p>
         </div>
-        <nav
-          className="flex border border-[var(--line)] bg-white"
-          aria-label="Desk sections"
-        >
-          <TabButton active={tab === "guide"} onClick={() => setTab("guide")}>
-            Guide
-          </TabButton>
-          <TabButton active={tab === "impact"} onClick={() => setTab("impact")}>
-            Lost revenue
-          </TabButton>
-          <TabButton
-            active={tab === "registry"}
-            onClick={() => setTab("registry")}
-          >
-            Registry
-          </TabButton>
-          <TabButton active={tab === "lots"} onClick={() => setTab("lots")}>
-            Lots
-          </TabButton>
+
+        <nav className="flex-1 overflow-y-auto px-2 py-4" aria-label="Desk">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label} className="mb-5">
+              <p className="px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
+                {group.label}
+              </p>
+              <ul className="mt-1.5 space-y-0.5">
+                {group.items.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => go(item.id)}
+                      className={`flex w-full items-center justify-between px-2 py-2 text-left text-sm ${
+                        tab === item.id
+                          ? "bg-[var(--ink)] text-[var(--paper)]"
+                          : "text-[var(--ink)] hover:bg-[var(--ink)]/[0.04]"
+                      }`}
+                    >
+                      {item.label}
+                      {item.badge && (
+                        <span
+                          className={`min-w-5 px-1.5 text-center text-[10px] font-semibold ${
+                            tab === item.id
+                              ? "bg-[var(--paper)] text-[var(--ink)]"
+                              : "bg-[var(--copper)] text-white"
+                          }`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </nav>
+
+        <div className="border-t border-[var(--line)] px-4 py-3 text-xs text-[var(--ink-muted)]">
+          <p>A. Bello · FMSMD inspector</p>
+          <p className="mt-0.5">Jos minerals desk</p>
+        </div>
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-[var(--line)] bg-white px-3 py-2.5 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              className="flex h-10 w-10 items-center justify-center border border-[var(--line)] text-[var(--ink)] lg:hidden"
+              aria-expanded={navOpen}
+              aria-controls="desk-nav"
+              onClick={() => setNavOpen((open) => !open)}
+            >
+              <span className="sr-only">Open menu</span>
+              <span aria-hidden className="flex flex-col gap-1">
+                <span className="block h-0.5 w-4 bg-current" />
+                <span className="block h-0.5 w-4 bg-current" />
+                <span className="block h-0.5 w-4 bg-current" />
+              </span>
+            </button>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
+                {page.kicker}
+              </p>
+              <h1 className="truncate font-display text-xl tracking-tight text-[var(--ink)] sm:text-2xl">
+                {page.title}
+              </h1>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-4 text-sm text-[var(--ink-muted)]">
+            <LiveClock className="hidden text-[var(--ink)] sm:inline" />
+            <a href="/" className="hover:text-[var(--ink)]">
+              Board
+            </a>
+            <form action={logoutDesk}>
+              <button type="submit" className="hover:text-[var(--ink)]">
+                Sign out
+              </button>
+            </form>
+          </div>
+        </header>
+
+        <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">
+          {tab === "guide" && <GuideTab prices={prices} onOpen={go} />}
+          {tab === "impact" && <ImpactTab prices={prices} />}
+          {tab === "registry" && <RegistryTab prices={prices} />}
+          {tab === "lots" && <LotsTab prices={prices} />}
+          {tab === "concessions" && <ConcessionsTab onOpenLot={() => go("lots")} />}
+          {tab === "alerts" && (
+            <AlertsTab
+              onOpenLots={() => go("lots")}
+              onOpenRegistry={() => go("registry")}
+            />
+          )}
+        </main>
       </div>
-
-      {tab === "guide" && <GuideTab prices={prices} onOpen={setTab} />}
-      {tab === "impact" && <ImpactTab prices={prices} />}
-      {tab === "registry" && <RegistryTab prices={prices} />}
-      {tab === "lots" && <LotsTab prices={prices} />}
     </div>
-  );
-}
-
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`min-h-10 px-4 text-sm font-medium ${
-        active
-          ? "bg-[var(--ink)] text-[var(--paper)]"
-          : "text-[var(--ink-muted)] hover:bg-[var(--ink)]/[0.04] hover:text-[var(--ink)]"
-      }`}
-    >
-      {children}
-    </button>
   );
 }
 
@@ -155,8 +267,8 @@ function GuideTab({
           metal.
         </p>
         <p className="text-sm text-[var(--ink-muted)]">
-          Today roughly {EXPORTS_NOW_T_MO.toLocaleString()} t of cassiterite
-          concentrate leaves for China every month — cash trades, no VAT
+          Today roughly {EXPORTS_NOW_T_MO.toLocaleString()} t of tin concentrate
+          leaves for China every month — cash trades, no VAT
           trail, and no royalty, because royalty only arises when metal is
           refined here. Everything below prices off the live NM-EX board (LME{" "}
           {formatUsd(prices.lmeUsd)}/t). Participants and lots are simulated.
@@ -242,6 +354,155 @@ function GuideCard({
   );
 }
 
+const CONCESSIONS = [
+  {
+    id: "ML-PL-2018-044",
+    name: "Jos South tin lease",
+    holder: "Plateau Tin Co.",
+    location: "Jos South, Plateau",
+    status: "Licensed",
+    area: "12.4 km²",
+    note: "On the book. Output aggregated at Jos Tin Shed.",
+  },
+  {
+    id: "ML-NS-2021-018",
+    name: "Wamba alluvial lease",
+    holder: "Nasarawa Minerals Ltd",
+    location: "Wamba, Nasarawa",
+    status: "Licensed",
+    area: "6.1 km²",
+    note: "On the book. Output aggregated at Wamba Tin Shed.",
+  },
+  {
+    id: "EL-NS-2024-007",
+    name: "Akwanga exploration",
+    holder: "Benue Valley Resources",
+    location: "Akwanga, Nasarawa",
+    status: "Exploration",
+    area: "18.0 km²",
+    note: "Licence current. No commercial lots this month.",
+  },
+  {
+    id: "UNLICENSED",
+    name: "Alluvial diggings",
+    holder: "Unregistered miners",
+    location: "Plateau / Nasarawa",
+    status: "Unlicensed",
+    area: "—",
+    note: "No concession file. Tonnes enter the book only at a registered shed.",
+  },
+] as const;
+
+function ConcessionsTab({ onOpenLot }: { onOpenLot: () => void }) {
+  return (
+    <div className="space-y-6">
+      <p className="max-w-3xl text-sm text-[var(--ink-muted)]">
+        Licensed concessions can sit on this register. Most alluvial production
+        has no licence — those tonnes are invisible until a shed weighs them
+        in. Display figures only.
+      </p>
+      <div className="overflow-x-auto border border-[var(--line)] bg-white">
+        <table className="w-full min-w-[40rem] text-sm">
+          <thead>
+            <tr className="border-b border-[var(--line)] text-left text-xs text-[var(--ink-muted)]">
+              <th className="px-4 py-2.5 font-normal">File</th>
+              <th className="px-4 py-2.5 font-normal">Concession</th>
+              <th className="px-4 py-2.5 font-normal">Holder</th>
+              <th className="px-4 py-2.5 font-normal">Status</th>
+              <th className="px-4 py-2.5 font-normal">Area</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[var(--line)]">
+            {CONCESSIONS.map((row) => (
+              <tr key={row.id}>
+                <td className="px-4 py-3 font-mono text-xs">{row.id}</td>
+                <td className="px-4 py-3">
+                  <p className="text-[var(--ink)]">{row.name}</p>
+                  <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
+                    {row.location} · {row.note}
+                  </p>
+                </td>
+                <td className="px-4 py-3">{row.holder}</td>
+                <td
+                  className={`px-4 py-3 ${
+                    row.status === "Unlicensed"
+                      ? "text-[var(--copper)]"
+                      : "text-[var(--forest)]"
+                  }`}
+                >
+                  {row.status}
+                </td>
+                <td className="px-4 py-3 tabular-nums">{row.area}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <button
+        type="button"
+        onClick={onOpenLot}
+        className="text-sm font-medium text-[var(--forest)] hover:underline"
+      >
+        Open lot book →
+      </button>
+    </div>
+  );
+}
+
+function AlertsTab({
+  onOpenLots,
+  onOpenRegistry,
+}: {
+  onOpenLots: () => void;
+  onOpenRegistry: () => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <p className="max-w-3xl text-sm text-[var(--ink-muted)]">
+        Exceptions the book can already see. Two open this month.
+      </p>
+      <article className="border border-[var(--copper)]/40 bg-white px-4 py-4 sm:px-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--copper)]">
+          Off book
+        </p>
+        <h2 className="mt-2 font-display text-xl tracking-tight text-[var(--ink)]">
+          NX-TIN-021 left Wamba Tin Shed with no invoice
+        </h2>
+        <p className="mt-2 text-sm text-[var(--ink-muted)]">
+          12 t concentrate. Cash after the shed. No VAT. No royalty. Last seen
+          with an unknown buyer on 12 Aug.
+        </p>
+        <button
+          type="button"
+          onClick={onOpenLots}
+          className="mt-3 text-sm font-medium text-[var(--forest)] hover:underline"
+        >
+          Open lot passport →
+        </button>
+      </article>
+      <article className="border border-[var(--line)] bg-white px-4 py-4 sm:px-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
+          Unmoved
+        </p>
+        <h2 className="mt-2 font-display text-xl tracking-tight text-[var(--ink)]">
+          NX-TIN-025 still at Lafia Tin Shed
+        </h2>
+        <p className="mt-2 text-sm text-[var(--ink-muted)]">
+          5 t received 14 Aug. No banked sale yet. Royalty not due until
+          refined.
+        </p>
+        <button
+          type="button"
+          onClick={onOpenRegistry}
+          className="mt-3 text-sm font-medium text-[var(--forest)] hover:underline"
+        >
+          Open Lafia shed ledger →
+        </button>
+      </article>
+    </div>
+  );
+}
+
 function ImpactTab({ prices }: { prices: TracePrices }) {
   const [projectedT, setProjectedT] = useState(EXPORTS_PROJECT_DEFAULT);
   const [domesticPct, setDomesticPct] = useState(DOMESTIC_USE_DEFAULT_PCT);
@@ -261,8 +522,8 @@ function ImpactTab({ prices }: { prices: TracePrices }) {
   return (
     <div className="space-y-10">
       <p className="max-w-3xl text-[var(--ink-muted)]">
-        Roughly {EXPORTS_NOW_T_MO.toLocaleString()} t of cassiterite
-        concentrate leaves for China every month — unrefined, paid in cash.
+        Roughly {EXPORTS_NOW_T_MO.toLocaleString()} t of tin concentrate
+        leaves for China every month — unrefined, paid in cash.
         The royalty is the big loss. Exports are zero-rated for VAT, so net
         VAT revenue comes only from refined tin sold in country. Priced off
         the live board, LME {formatUsd(prices.lmeUsd)}/t.
@@ -463,22 +724,22 @@ function ScenarioCard({
       </p>
       <p className="mt-1 text-sm text-[var(--ink-muted)]">{volume}</p>
       <p className="mt-3 font-display text-2xl tracking-tight text-[var(--ink)]">
-        {formatNgn(toNgn(totalUsd, fxRate))}
+        {formatNgn(toNgn(take.annualRoyalty, fxRate))}
       </p>
       <p className="text-sm text-[var(--ink-muted)]">
-        {formatUsd(totalUsd)} lost a year
+        {formatUsd(take.annualRoyalty)} royalty a year
       </p>
       <dl className="mt-4 space-y-1.5 border-t border-[var(--line)] pt-3 text-sm">
-        <div className="flex items-baseline justify-between gap-3">
-          <dt className="text-[var(--ink-muted)]">Royalty</dt>
-          <dd className="tabular-nums text-[var(--ink)]">
-            {formatNgn(toNgn(take.annualRoyalty, fxRate))}
-          </dd>
-        </div>
         <div className="flex items-baseline justify-between gap-3">
           <dt className="text-[var(--ink-muted)]">VAT · in-country</dt>
           <dd className="tabular-nums text-[var(--ink)]">
             {formatNgn(toNgn(take.annualVat, fxRate))}
+          </dd>
+        </div>
+        <div className="flex items-baseline justify-between gap-3">
+          <dt className="text-[var(--ink-muted)]">Total lost</dt>
+          <dd className="tabular-nums text-[var(--ink)]">
+            {formatNgn(toNgn(totalUsd, fxRate))}
           </dd>
         </div>
       </dl>

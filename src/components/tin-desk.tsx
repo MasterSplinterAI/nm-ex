@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import type { MineralQuote, TinPolicy } from "@/lib/types";
 import {
-  burdenedUsd,
   clampAssay,
   concentrateProcurementUsd,
   royaltyUsd,
@@ -43,9 +42,7 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
     assay,
   );
   const concentrateRoyalty = royaltyUsd(procurement, royaltyRate);
-  const concentrateBurdened = burdenedUsd(procurement, royaltyRate);
   const refinedRoyalty = royaltyUsd(lme, royaltyRate);
-  const refinedBurdened = burdenedUsd(lme, royaltyRate);
   const purityChanged = assay !== policy.defaultAssayPct;
 
   const formula = useMemo(
@@ -58,7 +55,7 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
     <div className="space-y-5 sm:space-y-6">
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--forest)]">
-          {tin.spec ?? "99.9% Sn"} · LME
+          {tin.spec ?? "99.85% Sn"} · LME
         </p>
         <HeroQuote
           label="Last"
@@ -69,9 +66,8 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
           <QuietQuote label="Open" usd={tin.openUsd} ngn={toNgn(tin.openUsd, fxRate)} />
           <QuietQuote label="Close" usd={tin.closeUsd} ngn={toNgn(tin.closeUsd, fxRate)} />
         </div>
-        <InclRoyalty
+        <RoyaltyLine
           rate={royaltyRate}
-          burdenedUsd={refinedBurdened}
           royaltyAmountUsd={refinedRoyalty}
           fxRate={fxRate}
         />
@@ -87,7 +83,7 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
               NM-EX procurement
             </p>
             <h3 className="mt-1 font-display text-xl tracking-tight text-[var(--ink)] sm:text-2xl">
-              Cassiterite
+              Tin concentrate
               <span className="ml-2 align-middle text-sm font-sans font-medium text-[var(--ink-muted)]">
                 {policy.concentrateSpec}
                 {purityChanged ? ` → ${formatPct(assay, 1)}` : ""}
@@ -101,7 +97,7 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
 
         <label className="mt-4 block">
           <span className="text-sm font-medium text-[var(--ink)]">
-            Cassiterite purity · % Sn
+            Tin concentrate purity · % Sn
           </span>
           <div className="mt-1.5 flex items-center gap-3">
             <input
@@ -140,12 +136,10 @@ export function TinDesk({ tin, fxRate, policy }: Props) {
         />
         <p className="mt-1 text-xs text-[var(--ink-muted)]">{formula}</p>
 
-        <InclRoyalty
+        <RoyaltyLine
           rate={royaltyRate}
-          burdenedUsd={concentrateBurdened}
           royaltyAmountUsd={concentrateRoyalty}
           fxRate={fxRate}
-          caption="Burdened export"
         />
       </article>
 
@@ -189,36 +183,25 @@ function HeroQuote({
   );
 }
 
-function InclRoyalty({
+function RoyaltyLine({
   rate,
-  burdenedUsd,
   royaltyAmountUsd,
   fxRate,
-  caption = "Including government royalty",
 }: {
   rate: number;
-  burdenedUsd: number | null;
   royaltyAmountUsd: number | null;
   fxRate: number;
-  caption?: string;
 }) {
   return (
     <div className="mt-4 border border-[var(--copper)]/30 bg-[rgb(143_106_69/0.07)] px-3 py-3 sm:px-4 sm:py-4">
       <p className="text-sm font-semibold text-[var(--copper)] sm:text-base">
-        {caption} · {formatPct(rate, 1)}
+        Government royalty · {formatPct(rate, 1)}
       </p>
       <p className="mt-1 font-display text-2xl tracking-tight text-[var(--ink)] sm:text-3xl">
-        {formatNgn(toNgn(burdenedUsd, fxRate))}
+        {formatNgn(toNgn(royaltyAmountUsd, fxRate))}
       </p>
-      <p className="mt-0.5 text-base text-[var(--ink)]">
-        {formatUsd(burdenedUsd)}
-      </p>
-      <p className="mt-2 text-sm text-[var(--ink)] sm:text-base">
-        Royalty {formatNgn(toNgn(royaltyAmountUsd, fxRate))}
-        <span className="text-[var(--ink-muted)]">
-          {" "}
-          · {formatUsd(royaltyAmountUsd)}
-        </span>
+      <p className="mt-0.5 text-sm text-[var(--ink-muted)]">
+        {formatUsd(royaltyAmountUsd)}
       </p>
     </div>
   );

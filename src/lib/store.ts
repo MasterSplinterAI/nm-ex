@@ -58,9 +58,13 @@ function hydrateBoard(board: SpotBoard): SpotBoard {
     ...board,
     minerals: board.minerals.map((mineral) => {
       const def = MINERALS.find((item) => item.slug === mineral.slug);
+      if (!def) return mineral;
       return {
         ...mineral,
-        spec: mineral.spec ?? def?.spec ?? null,
+        name: def.name,
+        symbol: def.symbol,
+        unit: def.unit,
+        spec: def.spec ?? mineral.spec ?? null,
       };
     }),
   };

@@ -69,7 +69,7 @@ export function SpotBoardSection({ board, policy }: Props) {
               Spot board
             </h2>
             <p className="mt-2 max-w-lg text-sm text-[var(--ink-muted)] sm:text-base">
-              Tap a mineral to expand. Tin includes cassiterite procurement.
+              Open a row for details. Tin includes tin concentrate procurement.
             </p>
           </div>
           <div className="text-sm text-[var(--ink-muted)] sm:text-right">
@@ -101,6 +101,7 @@ export function SpotBoardSection({ board, policy }: Props) {
                 <button
                   type="button"
                   aria-expanded={open}
+                  aria-label={`${open ? "Hide" : "View"} ${mineral.name} details`}
                   onClick={() => toggle(mineral.slug)}
                   className="w-full cursor-pointer touch-manipulation px-1 py-4 text-left transition hover:bg-[var(--ink)]/[0.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--forest)] sm:px-3 sm:py-6"
                 >
@@ -135,12 +136,21 @@ export function SpotBoardSection({ board, policy }: Props) {
                         </div>
                       )}
                       <span
-                        className={`text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ink-muted)] transition ${
-                          open ? "rotate-180" : ""
+                        className={`mt-0.5 inline-flex items-center gap-1.5 border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${
+                          open
+                            ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]"
+                            : "border-[var(--line)] bg-white text-[var(--ink)]"
                         }`}
-                        aria-hidden
                       >
-                        ▾
+                        {open ? "Hide details" : "View details"}
+                        <span
+                          className={`text-[10px] leading-none ${
+                            open ? "rotate-180" : ""
+                          }`}
+                          aria-hidden
+                        >
+                          ▾
+                        </span>
                       </span>
                     </div>
                   </div>

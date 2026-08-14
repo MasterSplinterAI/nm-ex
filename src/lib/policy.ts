@@ -1,7 +1,7 @@
 import type { TinPolicy } from "./types";
 
 export const DEFAULT_TIN_POLICY: TinPolicy = {
-  refinedSpec: "99.9% Sn",
+  refinedSpec: "99.85% Sn",
   concentrateSpec: "70% Sn",
   benchmarkPct: 70,
   defaultAssayPct: 70,
