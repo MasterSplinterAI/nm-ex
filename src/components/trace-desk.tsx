@@ -6,7 +6,7 @@ import { LiveClock } from "@/components/live-clock";
 import {
   DEMO_LOT_ID,
   DEMO_LOT_T,
-  DOMESTIC_USE_DEFAULT_PCT,
+  DOMESTIC_END_USE_DEFAULT_PCT,
   ENTITIES,
   EXPORTS_2023_T_MO,
   EXPORTS_NOW_T_MO,
@@ -307,9 +307,9 @@ function GuideTab({
         <p className="mt-3 text-xs text-[var(--ink-muted)]">
           Three rules carry the whole system: the book starts at the registered
           shed · every transfer is a banked payment with VAT invoiced · royalty
-          posts only when refined in Nigeria. Exports are zero-rated for VAT,
-          so chain VAT is credited back — the invoice trail is the control. Net
-          VAT revenue comes from tin sold in country.
+          posts only when refined in Nigeria. Export sales are zero-rated and
+          chain VAT is credited back. Government keeps VAT only when refined
+          tin is sold to a Nigerian end user.
         </p>
       </section>
 
@@ -511,7 +511,9 @@ function AlertsTab({
 
 function ImpactTab({ prices }: { prices: TracePrices }) {
   const [projectedT, setProjectedT] = useState(EXPORTS_PROJECT_DEFAULT);
-  const [domesticPct, setDomesticPct] = useState(DOMESTIC_USE_DEFAULT_PCT);
+  const [domesticPct, setDomesticPct] = useState(
+    DOMESTIC_END_USE_DEFAULT_PCT,
+  );
   const now = useMemo(
     () => nationalTake(prices, EXPORTS_NOW_T_MO, domesticPct),
     [prices, domesticPct],
@@ -528,11 +530,13 @@ function ImpactTab({ prices }: { prices: TracePrices }) {
   return (
     <div className="space-y-10">
       <p className="max-w-3xl text-[var(--ink-muted)]">
-        Roughly {EXPORTS_NOW_T_MO.toLocaleString()} t of tin concentrate
-        leaves for China every month — unrefined, paid in cash.
-        The royalty is the big loss. Exports are zero-rated for VAT, so net
-        VAT revenue comes only from refined tin sold in country. Priced off
-        the live board, LME {formatUsd(prices.lmeUsd)}/t.
+        Reported exports are about {EXPORTS_NOW_T_MO.toLocaleString()} t of
+        tin concentrate a month — unrefined, paid in cash. That is all the
+        volume we can see. How much is sold to a Nigerian end user is not
+        known. Royalty is calculated on the reported tonnes. VAT that
+        government would keep only arises if refined tin is sold in country;
+        chain hops and exports credit out. Priced off the live board, LME{" "}
+        {formatUsd(prices.lmeUsd)}/t.
       </p>
 
       <div className="grid gap-3 lg:grid-cols-3">
@@ -544,18 +548,18 @@ function ImpactTab({ prices }: { prices: TracePrices }) {
           detail={`${formatPct(prices.royaltyPct, 1)} of LME on recovered metal, export or domestic. Royalty only arises when tin is refined in Nigeria — nothing is refined, so nothing posts.`}
         />
         <LossCard
-          label="VAT not collected · in-country sales"
+          label="Estimated VAT compliance gap · domestic tin trading"
           annualUsd={now.annualVat}
           monthlyUsd={now.monthlyVat}
           fxRate={prices.fxRate}
-          detail={`${formatPct(VAT_PCT, 1)} output VAT on refined tin sold to Nigerian end users, assuming ${domesticPct}% stays in country. Exported tin is zero-rated, so chain VAT is credited back.`}
+          detail={`Estimated from domestic transactions occurring before export across the miner → tin shed → aggregator → exporter supply chain. Export sales are zero-rated; domestic taxable transactions are modelled separately, with applicable input-VAT credits. The figure assumes ${domesticPct}% of recovered metal is sold to a Nigerian end user — the only point government keeps the VAT. That share is not measured.`}
         />
         <LossCard
           label="Total lost per year"
           annualUsd={now.annualRoyalty + now.annualVat}
           monthlyUsd={now.monthlyRoyalty + now.monthlyVat}
           fxRate={prices.fxRate}
-          detail={`At today's reported ${EXPORTS_NOW_T_MO.toLocaleString()} t / month. Unreported tonnes sit on top of this figure.`}
+          detail={`Royalty on today's reported ${EXPORTS_NOW_T_MO.toLocaleString()} t / month, plus estimated VAT on the assumed in-country share. Unreported tonnes sit on top of this figure.`}
           accent
         />
       </div>
@@ -563,7 +567,7 @@ function ImpactTab({ prices }: { prices: TracePrices }) {
       <div className="max-w-3xl space-y-4">
         <label className="block max-w-xl">
           <span className="text-sm text-[var(--ink)]">
-            Refined tin sold in country — {domesticPct}%
+            Assumed share sold in country — {domesticPct}%
           </span>
           <div className="mt-2 flex items-center gap-4">
             <input
@@ -576,7 +580,7 @@ function ImpactTab({ prices }: { prices: TracePrices }) {
                 setDomesticPct(Number.parseInt(event.target.value, 10))
               }
               className="h-10 w-full accent-[var(--forest)]"
-              aria-label="Share of refined tin sold in country"
+              aria-label="Assumed share of refined tin sold in country"
             />
             <span className="w-24 shrink-0 text-right tabular-nums text-[var(--ink)]">
               {domesticPct}%
@@ -584,10 +588,11 @@ function ImpactTab({ prices }: { prices: TracePrices }) {
           </div>
         </label>
         <p className="text-sm text-[var(--ink-muted)]">
-          The {formatNgn(toNgn(now.annualChainVat, prices.fxRate))} of VAT
-          invoiced along the chain each year is not counted here — it comes
-          back to the exporter as input credit under zero-rating. Its value to
-          government is the invoice trail, not the cash.
+          Default {DOMESTIC_END_USE_DEFAULT_PCT}%. We only observe exports.
+          VAT on the card is {formatPct(VAT_PCT, 1)} of LME on that assumed
+          in-country share of recovered metal — the end-user sale. Shed and
+          aggregator invoices in between are credited to the next buyer;
+          exports are zero-rated and credited back.
         </p>
       </div>
 
@@ -740,7 +745,7 @@ function ScenarioCard({
       </p>
       <dl className="mt-4 space-y-1.5 border-t border-[var(--line)] pt-3 text-sm">
         <div className="flex items-baseline justify-between gap-3">
-          <dt className="text-[var(--ink-muted)]">VAT · in-country</dt>
+          <dt className="text-[var(--ink-muted)]">VAT · in-country (assumed)</dt>
           <dd className="tabular-nums text-[var(--ink)]">
             {formatNgn(toNgn(take.annualVat, fxRate))}
           </dd>

@@ -91,15 +91,16 @@ export function vatOnTransferUsd(valueUsd: number): number {
 }
 
 /**
- * Share of refined tin assumed sold to Nigerian end users. Exports are
- * zero-rated for VAT, so only in-country sales produce net VAT revenue.
+ * Assumed share of recovered metal sold to a Nigerian end user.
+ * Only that sale leaves net VAT with government. Chain hops and
+ * exports are credited or zero-rated.
  */
-export const DOMESTIC_USE_DEFAULT_PCT = 15;
+export const DOMESTIC_END_USE_DEFAULT_PCT = 20;
 
 export function nationalTake(
   prices: TracePrices,
   concentrateTMo: number,
-  domesticSharePct: number = DOMESTIC_USE_DEFAULT_PCT,
+  domesticEndUsePct: number = DOMESTIC_END_USE_DEFAULT_PCT,
 ) {
   const refinedTMo = refinedTonnes(concentrateTMo, prices.assayPct);
   const monthlyRoyalty = royaltyOnRefinedUsd(
@@ -114,15 +115,15 @@ export function nationalTake(
     prices.benchmarkPct,
     prices.assayPct,
   );
-  // Invoiced along the chain, but credited back against zero-rated exports.
   const monthlyChainVat = vatOnTransferUsd(monthlyValue);
-  // Output VAT on refined tin sold to Nigerian end users — the VAT that sticks.
+  // Net VAT government would keep: output VAT on assumed in-country
+  // end-user sales. Intermediate hops credit out; exports are 0%.
   const monthlyVat =
-    refinedTMo * (domesticSharePct / 100) * prices.lmeUsd * (VAT_PCT / 100);
+    refinedTMo * (domesticEndUsePct / 100) * prices.lmeUsd * (VAT_PCT / 100);
   return {
     concentrateTMo,
     refinedTMo,
-    domesticSharePct,
+    domesticEndUsePct,
     monthlyRoyalty,
     annualRoyalty: monthlyRoyalty * 12,
     monthlyVat,
