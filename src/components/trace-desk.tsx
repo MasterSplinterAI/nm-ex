@@ -124,10 +124,10 @@ export function TraceDesk({ prices }: Props) {
             FMSMD
           </p>
           <p className="mt-1 font-display text-lg tracking-tight text-[var(--ink)]">
-            National tin trace
+            National mineral traceability
           </p>
           <p className="mt-1 text-xs text-[var(--ink-muted)]">
-            NTS-TIN · simulation
+            Simulation
           </p>
         </div>
 
@@ -169,10 +169,6 @@ export function TraceDesk({ prices }: Props) {
           ))}
         </nav>
 
-        <div className="border-t border-[var(--line)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-xs text-[var(--ink-muted)]">
-          <p>A. Bello · FMSMD inspector</p>
-          <p className="mt-0.5">Jos minerals desk</p>
-        </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
