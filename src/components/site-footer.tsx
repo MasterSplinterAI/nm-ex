@@ -12,6 +12,11 @@ export function SiteFooter() {
         <div className="text-sm text-white/60">
           <p>nm-ex.com</p>
           <p className="mt-1">Ministry of Solid Minerals Development</p>
+          <p className="mt-3">
+            <a href="/desk" className="text-white/45 transition hover:text-white/80">
+              Desk
+            </a>
+          </p>
         </div>
       </div>
     </footer>
