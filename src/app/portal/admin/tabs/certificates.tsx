@@ -1,4 +1,5 @@
-import { ActionForm, inputClass } from "@/components/portal/action-button";
+import { ActionForm } from "@/components/portal/action-button";
+import { inputClass } from "@/components/portal/form-styles";
 import { Panel } from "@/components/portal/panel";
 import { CertStatusPill } from "@/components/portal/status-pill";
 import { formatDateTime, formatNgn } from "@/lib/format";

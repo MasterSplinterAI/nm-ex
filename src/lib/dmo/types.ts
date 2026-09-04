@@ -41,6 +41,7 @@ export type PurchaseEntry = {
   kg: number;
   gradePct: number;
   valueNgn: number;
+  /** Optional shed-book / receipt number for the supplier’s own records. */
   reference: string;
   lotId: string | null;
   createdAt: string;

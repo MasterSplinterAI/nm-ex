@@ -35,16 +35,16 @@ Prices are never fixed. Every offer shows indicative values from the live board;
 
 | Role | Account | Registration |
 | --- | --- | --- |
-| Supplier | Solex Tin Ltd | NMEX-SUP-2026-00456 |
+| Supplier | Musa & Son Ltd | NMEX-SUP-2026-00456 |
 | Smelter | United Smelters Ltd | NMEX-SMEL-2026-00015 |
 | Domestic buyer | Lagos Solder Works Ltd | NMEX-BUY-2026-00102 |
 | NM-EX officer | NM-EX Compliance & Market Operations | — |
-| Verifier | Neroli Inspection Services (PIA) | — |
+| Verifier | Nairobi Inspection Services | — |
 | Pending applicant | Wamba Tin Shed | awaiting review |
 
 **QR / reuse lock:** a scan of `/verify?no=` shows live status. An appointed NESS / Customs verifier signs in and marks the clearance **utilized**; that status is terminal and the same number cannot support a second shipment.
 
-**Suggested walkthrough** (≈15 minutes): `/exchange` → `/verify` with `NMEX-DMO-EC-TINC-2026-00021` (then sign in as Neroli to mark utilized) → officer dashboard cards and Traceability report → register a tin shed → officer approves it → Solex adds a 50 kg purchase, the MML button unlocks, submit → officer marks sample received and enters the assay → United accepts the 25 MT lot in the National Pool (DMO-A issues) → pay, collect, create a parent lot, register refined output → Lagos Solder buys refined tin → officer advances the clock 120 h → reset.
+**Suggested walkthrough** (≈15 minutes): `/exchange` → `/verify` with `NMEX-DMO-EC-TINC-2026-00021` (then sign in as Nairobi to mark utilized) → officer dashboard cards and Traceability report → register a tin shed → officer approves it → Musa & Son Ltd adds a 50 kg purchase, the MML button unlocks, submit → officer marks sample received and enters the assay → United accepts the 25 MT lot in the National Pool (DMO-A issues) → pay, collect, create a parent lot, register refined output → Lagos Solder buys refined tin → officer advances the clock 120 h → reset.
 
 Demo state lives in `data/demo.json` locally and `/var/lib/nm-ex/demo.json` in production (`NM_EX_DEMO_PATH` overrides). Delete it or use **Demo controls → Reset** to rebuild the seed. Run `npm test` for the valuation, state-machine and seed tests.
 

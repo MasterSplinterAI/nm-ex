@@ -33,7 +33,7 @@ export default async function BuyerPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      {active === "home" && <BuyerHome state={state} me={me} />}
+      {active === "home" && <BuyerHome state={state} me={me} nowIso={nowIso} />}
       {active !== "home" && (
         <PageHeader
           kicker="Domestic end user"

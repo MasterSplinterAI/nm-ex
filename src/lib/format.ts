@@ -115,3 +115,16 @@ export function formatDateTime(iso: string): string {
     timeZone: "Africa/Lagos",
   }).format(new Date(iso));
 }
+
+export function formatWelcomeStamp(iso: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Africa/Lagos",
+  }).format(new Date(iso));
+}

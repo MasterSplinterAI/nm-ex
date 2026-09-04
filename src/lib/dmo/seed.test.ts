@@ -8,6 +8,7 @@ const NOW = "2026-09-04T08:00:00.000Z";
 test("seed contains the scripted scenario", () => {
   const s = buildSeed(seedBoard(), NOW);
   const solex = s.participants.find((p) => p.id === SEED_IDS.solex)!;
+  assert.equal(solex.legalName, "Musa & Son Ltd");
   assert.equal(solex.regNo, "NMEX-SUP-2026-00456");
   assert.equal(s.participants.find((p) => p.id === SEED_IDS.united)!.regNo, "NMEX-SMEL-2026-00015");
   assert.equal(s.participants.find((p) => p.id === SEED_IDS.solder)!.regNo, "NMEX-BUY-2026-00102");

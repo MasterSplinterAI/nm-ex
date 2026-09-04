@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { demoNowIso } from "@/lib/dmo/clock";
 import { tabFromSearch } from "@/lib/dmo/nav";
+import { participantById } from "@/lib/dmo/queries";
 import { getSession } from "@/lib/dmo/session";
 import { readState } from "@/lib/dmo/store";
 import { readSpotBoard } from "@/lib/store";
@@ -30,10 +31,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
   const [state, board] = await Promise.all([readState(), readSpotBoard()]);
   const nowIso = demoNowIso(state);
+  const me = participantById(state, session.participantId)!;
 
   return (
     <>
-      {current === "home" && <AdminHome state={state} board={board} nowIso={nowIso} />}
+      {current === "home" && <AdminHome state={state} board={board} nowIso={nowIso} me={me} />}
       {current === "registrations" && (
         <>
           <PageHeader kicker="Operations" title="Registrations" lede="Approve, request more information, reject or suspend. Submission never activates an account on its own." />
@@ -48,7 +50,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       )}
       {current === "offers" && (
         <>
-          <PageHeader kicker="Market" title="National Pool" lede="Open domestic offers. Close with no acceptance to issue an export clearance at the current board price." />
+          <PageHeader kicker="Market" title="National Pool" lede="Concentrate is offered to smelters. Refined tin is offered to domestic buyers. Those are two different boards." />
           <OffersTab state={state} board={board} nowIso={nowIso} />
         </>
       )}

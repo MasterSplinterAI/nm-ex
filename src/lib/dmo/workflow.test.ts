@@ -180,6 +180,26 @@ test("pay → collect → parent lot → refined lot → offer to buyers → DMO
   assert.match(cert.certNo, /^NMEX-DMO-ER-TIN-2026-00001$/);
 });
 
+test("submit records the chosen warehouse", () => {
+  const s = emptyState(NOW);
+  const sup = approvedSupplier(s);
+  const ctx = { ...officer, actorId: sup.id };
+  for (let i = 0; i < 20; i++) {
+    addPurchase(s, ctx, {
+      supplierId: sup.id,
+      date: "2026-08-20",
+      source: "Miner",
+      kg: 50,
+      gradePct: 72,
+      valueNgn: 1,
+      reference: "",
+    });
+  }
+  const warehouse = "NM-EX Approved Warehouse & Assay Centre — Lagos";
+  const { inspection } = submitForInspection(s, ctx, { supplierId: sup.id, tier: 1, kg: 1000, warehouse });
+  assert.equal(inspection.warehouse, warehouse);
+});
+
 test("certificate status changes append history and UTILIZED closes the lot", () => {
   const s = emptyState(NOW);
   const sup = approvedSupplier(s);

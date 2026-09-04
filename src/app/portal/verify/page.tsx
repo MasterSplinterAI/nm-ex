@@ -1,13 +1,16 @@
 import { redirect } from "next/navigation";
-import { ActionForm, inputClass } from "@/components/portal/action-button";
+import { ActionForm } from "@/components/portal/action-button";
+import { inputClass } from "@/components/portal/form-styles";
 import { CertificateSheet } from "@/components/certificate/certificate-sheet";
 import { PrintButton } from "@/components/certificate/print-button";
-import { DashCard } from "@/components/portal/dash-card";
+import { KpiTile, StatusTile } from "@/components/portal/kpi-tile";
 import { Panel } from "@/components/portal/panel";
 import { CertStatusPill } from "@/components/portal/status-pill";
+import { WelcomeBanner } from "@/components/portal/welcome-banner";
 import { formatDate } from "@/lib/format";
+import { demoNowIso } from "@/lib/dmo/clock";
 import { tabFromSearch } from "@/lib/dmo/nav";
-import { certificateFullView } from "@/lib/dmo/queries";
+import { certificateFullView, participantById } from "@/lib/dmo/queries";
 import { qrSvg, verifyUrl } from "@/lib/dmo/qr";
 import { getSession } from "@/lib/dmo/session";
 import { readState } from "@/lib/dmo/store";
@@ -22,6 +25,8 @@ export default async function VerifierPage({ searchParams }: { searchParams: Pro
   const query = (no ?? "").trim();
   const showRegister = tabFromSearch(tab) === "register" && !query;
   const state = await readState();
+  const me = participantById(state, session.participantId)!;
+  const nowIso = demoNowIso(state);
   const view = query ? certificateFullView(state, query) : null;
   const svg = view ? await qrSvg(verifyUrl(view.certNo)) : null;
   const clearances = state.certificates.filter((c) => c.cls !== "DMO-A").sort((a, b) => b.issuedAt.localeCompare(a.issuedAt));
@@ -31,26 +36,26 @@ export default async function VerifierPage({ searchParams }: { searchParams: Pro
   return (
     <>
       {!query && !showRegister && (
-        <div className="space-y-6">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--forest)]">Appointed verifier · NESS / Customs / PIA</p>
-            <h1 className="font-display mt-1 text-2xl tracking-tight sm:text-3xl">Scan station</h1>
-            <p className="mt-1 max-w-2xl text-sm text-[var(--ink-muted)]">
-              A QR on a DMO certificate opens the live record. Confirm the lot, then mark the clearance utilized so that number can never
-              support a second shipment.
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <DashCard href="/portal/verify?tab=register" kicker="Register" title="Unused clearances" value={unused} hint="Valid DMO-EC / DMO-ER certificates not yet presented at the port." tone={unused ? "ok" : "ink"} />
-            <DashCard href="/portal/verify?tab=register" kicker="Register" title="Already utilized" value={used} hint="Permanently spent. A second scan will show UTILIZED." />
-            <DashCard href="/verify" kicker="Public" title="Public verify page" hint="What a bank or counterpart sees without signing in — status and physical facts only." />
+        <div className="space-y-5">
+          <WelcomeBanner name={me.legalName} nowIso={nowIso} />
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <KpiTile href="/portal/verify?tab=register" icon="cert" label="Unused clearances" value={unused} hint="Valid DMO-EC / DMO-ER not yet presented." />
+            <KpiTile href="/portal/verify?tab=register" icon="check" label="Already utilized" value={used} hint="Permanently spent numbers." />
+            <KpiTile href="/verify" icon="scan" label="Public verify" value="Open" hint="What a bank sees without signing in." />
+            <StatusTile
+              href="/portal/verify?tab=register"
+              label="Port desk"
+              ok={unused === 0}
+              okText="No unused clearances waiting at the port"
+              waitText={`${unused} clearance${unused === 1 ? "" : "s"} still valid for a first scan`}
+            />
           </div>
         </div>
       )}
 
       <form method="get" action="/portal/verify" className="my-6 flex flex-col gap-3 sm:flex-row">
         <input name="no" defaultValue={query} placeholder="Scan QR or enter certificate number" className={`${inputClass} h-12 flex-1 font-mono uppercase`} autoFocus />
-        <button type="submit" className="h-12 bg-[var(--ink)] px-6 text-sm font-semibold text-[var(--paper)] hover:bg-[var(--forest)]">
+        <button type="submit" className="h-12 rounded-lg bg-[#1b4d38] px-6 text-sm font-semibold text-white hover:bg-[#163d2c]">
           Look up
         </button>
       </form>

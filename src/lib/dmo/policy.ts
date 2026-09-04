@@ -1,3 +1,4 @@
+import { FACILITY_WAREHOUSES } from "./facilities";
 import type { DmoPolicy } from "./types";
 
 export const DEFAULT_DMO_POLICY: DmoPolicy = {
@@ -44,10 +45,7 @@ export const DEFAULT_DMO_POLICY: DmoPolicy = {
       "Description of industrial use",
     ],
   },
-  warehouses: [
-    "NM-EX Approved Warehouse & Assay Centre — Jos",
-    "NM-EX Approved Warehouse & Assay Centre — Lafia",
-  ],
+  warehouses: FACILITY_WAREHOUSES,
 };
 
 export function tierForGrade(gradePct: number, policy: DmoPolicy): 1 | 2 {

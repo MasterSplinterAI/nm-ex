@@ -9,9 +9,9 @@ export type ActionResult = { error?: string; ok?: string } | null;
 type ButtonTone = "primary" | "secondary" | "danger" | "ghost";
 
 const TONE: Record<ButtonTone, string> = {
-  primary: "bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--forest)]",
-  secondary: "border border-[var(--ink)]/30 bg-white text-[var(--ink)] hover:border-[var(--ink)]",
-  danger: "border border-[#9b2c2c]/40 bg-white text-[#9b2c2c] hover:bg-[#9b2c2c]/5",
+  primary: "rounded-lg bg-[#1b4d38] text-white hover:bg-[#163d2c]",
+  secondary: "rounded-lg border border-[var(--ink)]/30 bg-white text-[var(--ink)] hover:border-[var(--ink)]",
+  danger: "rounded-lg border border-[#9b2c2c]/40 bg-white text-[#9b2c2c] hover:bg-[#9b2c2c]/5",
   ghost: "text-[var(--ink-muted)] hover:text-[var(--ink)] underline-offset-4 hover:underline",
 };
 
@@ -88,6 +88,4 @@ export function ActionForm({
   );
 }
 
-export const inputClass =
-  "h-11 w-full border border-[var(--line)] bg-white px-3 text-sm text-[var(--ink)] focus:border-[var(--forest)] focus:outline-none";
-export const labelClass = "block text-xs uppercase tracking-[0.14em] text-[var(--ink-muted)]";
+export { inputClass, labelClass } from "./form-styles";

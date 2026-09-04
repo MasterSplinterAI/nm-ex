@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { ActionButton, ActionForm, inputClass, labelClass } from "@/components/portal/action-button";
+import { ActionButton, ActionForm } from "@/components/portal/action-button";
+import { inputClass, labelClass } from "@/components/portal/form-styles";
 import { Countdown } from "@/components/portal/countdown";
 import { Empty } from "@/components/portal/empty";
 import { Money } from "@/components/portal/money";
@@ -16,19 +17,25 @@ import { readState } from "@/lib/dmo/store";
 import { referenceValueNgn } from "@/lib/dmo/valuation";
 import { readSpotBoard } from "@/lib/store";
 import { PageHeader } from "../page-header";
-import { addPurchaseAction, submitLotAction } from "./actions";
+import { ListingDetail } from "@/components/portal/listing-detail";
+import { lotBundle } from "@/lib/dmo/lot-view";
+import { addPurchaseAction } from "./actions";
+import { AssayResults } from "./assay-results";
+import { SupplierConsolidate } from "./consolidate";
 import { SupplierHome } from "./home";
+import { SupplierPoolListings } from "./pool-listings";
 
 export const dynamic = "force-dynamic";
 
-type TabId = "home" | "ledger" | "lots" | "certificates";
+type TabId = "home" | "ledger" | "lots" | "listing" | "certificates" | "consolidate";
 
-export default async function SupplierPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+export default async function SupplierPage({ searchParams }: { searchParams: Promise<{ tab?: string; lot?: string }> }) {
   const session = await getSession();
   if (!session || session.role !== "supplier") redirect("/portal");
-  const { tab } = await searchParams;
+  const { tab, lot: lotId } = await searchParams;
   const raw = tabFromSearch(tab);
-  const active: TabId = raw === "lots" || raw === "certificates" || raw === "ledger" ? raw : "home";
+  const active: TabId =
+    raw === "lots" || raw === "listing" || raw === "certificates" || raw === "ledger" || raw === "consolidate" ? raw : "home";
 
   const [state, board] = await Promise.all([readState(), readSpotBoard()]);
   const me = participantById(state, session.participantId)!;
@@ -42,11 +49,31 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
 
   return (
     <>
-      {active === "home" && <SupplierHome state={state} me={me} />}
-      {active !== "home" && (
+      {active === "home" && <SupplierHome state={state} me={me} nowIso={nowIso} />}
+      {active === "consolidate" && <SupplierConsolidate state={state} me={me} />}
+      {active === "lots" && lotId && <AssayResults state={state} me={me} lotId={lotId} />}
+      {active === "listing" && lotId && (() => {
+        const bundle = lotBundle(state, lotId);
+        return bundle && bundle.lot.ownerId === me.id ? (
+          <ListingDetail
+            bundle={bundle}
+            policy={state.policy}
+            lmeUsd={lme}
+            fxRate={board.fx.rate}
+            audience="owner"
+            backHref="/portal/supplier?tab=listing"
+          />
+        ) : (
+          <p className="text-sm text-[var(--ink-muted)]">That listing is not on this shed’s register.</p>
+        );
+      })()}
+      {active === "listing" && !lotId && (
+        <SupplierPoolListings state={state} me={me} lmeUsd={lme} fxRate={board.fx.rate} />
+      )}
+      {active !== "home" && active !== "consolidate" && !(active === "lots" && lotId) && active !== "listing" && (
         <PageHeader
           kicker="Supplier"
-          title={active === "ledger" ? "Purchase ledger" : active === "lots" ? "My lots" : "Certificates"}
+          title={active === "ledger" ? "Purchase logs" : active === "lots" ? "Assay & inspection" : "Certificates"}
           lede={me.regNo ?? undefined}
         />
       )}
@@ -62,7 +89,7 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
                   const pct = Math.min(100, (kg / mml) * 100);
                   const ready = kg >= mml;
                   return (
-                    <div key={tier} className="border border-[var(--line)] bg-white/70 p-4">
+                    <div key={tier} className="portal-card p-4">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">
                         Tier {tier} · {tier === 1 ? `above ${state.policy.tier1MinGradePct}% Sn` : `${state.policy.tier1MinGradePct}% Sn and below`}
                       </p>
@@ -72,11 +99,17 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
                       <div className="mt-3 h-2 w-full bg-[var(--ink)]/10">
                         <div className={`h-2 ${ready ? "bg-[var(--forest)]" : "bg-[var(--copper)]"}`} style={{ width: `${pct}%` }} />
                       </div>
-                      <ActionForm action={submitLotAction} hidden={{ tier: String(tier), kg: String(kg) }} className="mt-4" confirm={ready ? `Submit ${kg} kg for inspection? Purchases are locked to the lot.` : undefined}>
-                        <ActionButton disabled={!ready} pendingText="Submitting…" className="w-full">
-                          {ready ? `Submit ${formatKg(kg)} for inspection` : `${formatKg(mml - kg)} more to reach MML`}
-                        </ActionButton>
-                      </ActionForm>
+                      <a
+                        href="/portal/supplier?tab=consolidate"
+                        className={`mt-4 inline-flex h-11 w-full items-center justify-center rounded-lg text-sm font-semibold ${
+                          ready
+                            ? "bg-[#1b4d38] text-white hover:bg-[#163d2c]"
+                            : "cursor-not-allowed bg-[var(--ink)]/10 text-[var(--ink-muted)]"
+                        }`}
+                        aria-disabled={!ready}
+                      >
+                        {ready ? `Consolidate ${formatKg(kg)} — choose warehouse` : `${formatKg(mml - kg)} more to reach MML`}
+                      </a>
                       {kg > 0 && (
                         <p className="mt-2 text-xs text-[var(--ink-muted)]">
                           Indicative reference at today&apos;s board: {formatNgn(referenceValueNgn(kg / 1000, tier === 1 ? 72 : 45, lme, board.fx.rate))} (assumes {tier === 1 ? 72 : 45}% Sn until assayed)
@@ -95,23 +128,25 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
                 <table className="w-full text-sm">
                   <thead className="text-left text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
                     <tr>
+                      <th className="pb-2 font-semibold">Purchase ID</th>
                       <th className="pb-2 font-semibold">Date</th>
                       <th className="pb-2 font-semibold">Source</th>
+                      <th className="pb-2 font-semibold">Your reference</th>
                       <th className="pb-2 text-right font-semibold">Weight</th>
                       <th className="pb-2 text-right font-semibold">Grade</th>
                       <th className="pb-2 text-right font-semibold">Paid</th>
-                      <th className="pb-2 text-right font-semibold">Ref</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--line)]">
                     {[...inv.entries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)).map((e) => (
                       <tr key={e.id}>
+                        <td className="py-2 tabular-nums font-semibold">{e.id}</td>
                         <td className="py-2 tabular-nums">{e.date}</td>
                         <td className="py-2">{e.source}</td>
+                        <td className="py-2 tabular-nums text-[var(--ink-muted)]">{e.reference || "—"}</td>
                         <td className="py-2 text-right tabular-nums">{formatKg(e.kg)}</td>
                         <td className="py-2 text-right tabular-nums">{formatPct(e.gradePct, 2)}</td>
                         <td className="py-2 text-right tabular-nums">{formatNgn(e.valueNgn)}</td>
-                        <td className="py-2 text-right tabular-nums text-xs text-[var(--ink-muted)]">{e.reference || "—"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -145,8 +180,11 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
                 <input name="valueNgn" type="number" step="1" min="0" className={`${inputClass} mt-1`} defaultValue={2_175_000} />
               </label>
               <label className="block">
-                <span className={labelClass}>Receipt reference</span>
-                <input name="reference" className={`${inputClass} mt-1`} placeholder="RCPT-…" />
+                <span className={labelClass}>Your reference (optional)</span>
+                <input name="reference" className={`${inputClass} mt-1`} placeholder="e.g. RCPT-4421 or cash book folio" />
+                <span className="mt-1 block text-xs text-[var(--ink-muted)]">
+                  Cross-reference against your own books. NM-EX assigns a unique purchase ID when you save.
+                </span>
               </label>
               <ActionButton pendingText="Recording…">Add to ledger</ActionButton>
               <p className="text-xs text-[var(--ink-muted)]">
@@ -157,7 +195,7 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
         </div>
       )}
 
-      {active === "lots" && (
+      {active === "lots" && !lotId && (
         <div className="space-y-4">
           {lots.length === 0 ? (
             <Empty>No lots yet. Reach the minimum marketable lot in the ledger and submit for inspection.</Empty>
@@ -168,7 +206,7 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
               const lotCerts = certs.filter((c) => c.lotId === lot.id);
               const ref = lot.verifiedKg != null ? referenceValueNgn(lot.verifiedKg / 1000, lot.verifiedGradePct!, lme, board.fx.rate) : null;
               return (
-                <article key={lot.id} className="border border-[var(--line)] bg-white/70 p-5">
+                <article key={lot.id} className="portal-card p-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <h3 className="font-display text-xl tabular-nums">{lot.id}</h3>
@@ -229,6 +267,16 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
                         <span className="ml-2"><CertStatusPill status={c.status} /></span>
                       </div>
                     ))}
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-4 text-sm">
+                    <a href={`/portal/supplier?tab=lots&lot=${encodeURIComponent(lot.id)}`} className="font-semibold text-[var(--forest)] hover:underline">
+                      View assay &amp; inspection
+                    </a>
+                    {offer && (
+                      <a href={`/portal/supplier?tab=listing&lot=${encodeURIComponent(lot.id)}`} className="font-semibold text-[#1f4b6b] hover:underline">
+                        View listing →
+                      </a>
+                    )}
                   </div>
                 </article>
               );

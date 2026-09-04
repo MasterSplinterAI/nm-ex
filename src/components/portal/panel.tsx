@@ -13,7 +13,7 @@ export function Panel({ kicker, title, actions, children, className = "", id }: 
   return (
     <section
       id={id}
-      className={`border border-[var(--line)] bg-white/70 px-4 py-4 sm:px-6 sm:py-5 ${className}`}
+      className={`portal-card px-4 py-4 sm:px-6 sm:py-5 ${className}`}
     >
       {(kicker || title || actions) && (
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

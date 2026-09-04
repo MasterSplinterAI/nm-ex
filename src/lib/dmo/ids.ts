@@ -29,6 +29,10 @@ export function lotId(state: Counters, kind: LotKind, year: number): string {
   return `NMEX-${prefix}-${year}-${pad(nextCounter(state, `lot:${kind}:${year}`), 5)}`;
 }
 
+export function purchaseId(state: Counters, year: number): string {
+  return `NMEX-PUR-${year}-${pad(nextCounter(state, `pur:${year}`), 5)}`;
+}
+
 export function parentLotId(state: Counters, year: number): string {
   return `NMEX-AGG-TIN-${year}-${pad(nextCounter(state, `parent:${year}`), 4)}`;
 }

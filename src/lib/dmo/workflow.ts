@@ -1,7 +1,8 @@
 import { record } from "./audit";
 import { addDays, addHours, yearOf } from "./clock";
-import { certificateNumber, lotId, parentLotId, regNo, simpleId } from "./ids";
+import { certificateNumber, lotId, parentLotId, purchaseId, regNo, simpleId } from "./ids";
 import { kgToMt, round2 } from "./money";
+import { FACILITY_WAREHOUSES } from "./facilities";
 import { DEFAULT_DMO_POLICY, mmlKgForTier, tierForGrade } from "./policy";
 import {
   WorkflowError,
@@ -89,6 +90,12 @@ function requireOfficer(s: DemoState, ctx: Ctx) {
   if (!isOfficer(s, ctx.actorId)) {
     throw new WorkflowError("Only an NM-EX officer may do this.");
   }
+}
+
+function pickWarehouse(s: DemoState, requested?: string): string {
+  const allowed = new Set([...s.policy.warehouses, ...FACILITY_WAREHOUSES]);
+  if (requested && allowed.has(requested)) return requested;
+  return s.policy.warehouses[0] ?? FACILITY_WAREHOUSES[0] ?? "NM-EX Approved Warehouse";
 }
 
 function log(
@@ -216,7 +223,7 @@ export function addPurchase(
     throw new WorkflowError("Grade must be between 0 and 100%.");
   }
   const entry: PurchaseEntry = {
-    id: simpleId(s, "pur"),
+    id: purchaseId(s, yearOf(input.date || ctx.nowIso)),
     supplierId: supplier.id,
     date: input.date,
     source: input.source.trim() || "Unregistered supplier",
@@ -267,7 +274,7 @@ export function canSubmitLot(s: DemoState, supplierId: string, tier: 1 | 2): boo
 export function submitForInspection(
   s: DemoState,
   ctx: Ctx,
-  input: { supplierId: string; tier: 1 | 2; kg: number },
+  input: { supplierId: string; tier: 1 | 2; kg: number; warehouse?: string },
 ): { lot: Lot; inspection: Inspection } {
   const supplier = findParticipant(s, input.supplierId);
   requireApproved(supplier, "supplier");
@@ -323,7 +330,7 @@ export function submitForInspection(
     id: simpleId(s, "insp"),
     lotId: lot.id,
     submittedKg: sum,
-    warehouse: s.policy.warehouses[0] ?? "NM-EX Approved Warehouse",
+    warehouse: pickWarehouse(s, input.warehouse),
     windowEndsAt: addHours(ctx.nowIso, s.policy.sampleWindowHours),
     status: "awaiting_sample",
     sampleReceivedAt: null,

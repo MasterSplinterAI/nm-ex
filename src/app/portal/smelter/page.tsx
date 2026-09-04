@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
-import { ActionButton, ActionForm, inputClass, labelClass } from "@/components/portal/action-button";
+import { ActionButton, ActionForm } from "@/components/portal/action-button";
+import { inputClass, labelClass } from "@/components/portal/form-styles";
 import { Countdown } from "@/components/portal/countdown";
 import { Empty } from "@/components/portal/empty";
 import { Money } from "@/components/portal/money";
 import { Panel } from "@/components/portal/panel";
-import { PoolCard } from "@/components/portal/pool-card";
 import { CertStatusPill, LotStatusPill, StatusPill } from "@/components/portal/status-pill";
 import { formatDate, formatDateTime, formatKg, formatNgn, formatPct } from "@/lib/format";
 import { demoNowIso } from "@/lib/dmo/clock";
@@ -14,18 +14,21 @@ import { getSession } from "@/lib/dmo/session";
 import { readState } from "@/lib/dmo/store";
 import { readSpotBoard } from "@/lib/store";
 import { PageHeader } from "../page-header";
+import { ListingDetail } from "@/components/portal/listing-detail";
+import { lotBundle } from "@/lib/dmo/lot-view";
 import { acceptOfferAction, collectAction, createParentLotAction, payAction, registerRefinedAction } from "./actions";
 import { SmelterHome } from "./home";
+import { PoolBoard } from "./pool-board";
 
 export const dynamic = "force-dynamic";
 
 const TABS = ["home", "pool", "acceptances", "inventory", "refined", "certificates"] as const;
 type TabId = (typeof TABS)[number];
 
-export default async function SmelterPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+export default async function SmelterPage({ searchParams }: { searchParams: Promise<{ tab?: string; lot?: string }> }) {
   const session = await getSession();
   if (!session || session.role !== "smelter") redirect("/portal");
-  const { tab } = await searchParams;
+  const { tab, lot: lotId } = await searchParams;
   const active: TabId = TABS.includes(tabFromSearch(tab) as TabId) ? (tabFromSearch(tab) as TabId) : "home";
 
   const [state, board] = await Promise.all([readState(), readSpotBoard()]);
@@ -43,8 +46,8 @@ export default async function SmelterPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      {active === "home" && <SmelterHome state={state} me={me} />}
-      {active !== "home" && (
+      {active === "home" && <SmelterHome state={state} me={me} nowIso={nowIso} />}
+      {active !== "home" && active !== "pool" && (
         <PageHeader
           kicker="Qualified domestic smelter"
           title={
@@ -62,20 +65,24 @@ export default async function SmelterPage({ searchParams }: { searchParams: Prom
         />
       )}
 
-      {active === "pool" && (
-        <div className="space-y-4">
-          <p className="text-sm text-[var(--ink-muted)]">
-            Verified concentrate offered domestically before it can be exported. Accept within the window to buy at reference × {state.policy.coefToSmelter}
-            with the royalty liability transferred to you at ₦0.
-          </p>
-          {pool.length === 0 ? (
-            <Empty>The National Pool is empty right now. Lots appear here the moment NM-EX locks an assay.</Empty>
-          ) : (
-            pool.map((entry) => (
-              <PoolCard key={entry.offer.id} entry={entry} policy={state.policy} lmeUsd={lme} fxRate={board.fx.rate} nowIso={nowIso} acceptAction={acceptOfferAction} verb="Accept" />
-            ))
-          )}
-        </div>
+      {active === "pool" && lotId && (() => {
+        const bundle = lotBundle(state, lotId);
+        return bundle && bundle.offer ? (
+          <ListingDetail
+            bundle={bundle}
+            policy={state.policy}
+            lmeUsd={lme}
+            fxRate={board.fx.rate}
+            audience="smelter"
+            backHref="/portal/smelter?tab=pool"
+            acceptAction={acceptOfferAction}
+          />
+        ) : (
+          <p className="text-sm text-[var(--ink-muted)]">That lot is not on the National Pool.</p>
+        );
+      })()}
+      {active === "pool" && !lotId && (
+        <PoolBoard pool={pool} policy={state.policy} lmeUsd={lme} fxRate={board.fx.rate} nowIso={nowIso} />
       )}
 
       {active === "acceptances" && (

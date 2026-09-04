@@ -1,4 +1,5 @@
-import { ActionButton, ActionForm, inputClass, labelClass } from "@/components/portal/action-button";
+import { ActionButton, ActionForm } from "@/components/portal/action-button";
+import { inputClass, labelClass } from "@/components/portal/form-styles";
 import { Panel } from "@/components/portal/panel";
 import type { DemoState } from "@/lib/dmo/types";
 import { updatePolicyAction } from "../actions";

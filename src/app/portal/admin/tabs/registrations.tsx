@@ -1,4 +1,5 @@
-import { ActionButton, ActionForm, inputClass } from "@/components/portal/action-button";
+import { ActionButton, ActionForm } from "@/components/portal/action-button";
+import { inputClass } from "@/components/portal/form-styles";
 import { Empty } from "@/components/portal/empty";
 import { FieldList } from "@/components/portal/field-list";
 import { Panel } from "@/components/portal/panel";

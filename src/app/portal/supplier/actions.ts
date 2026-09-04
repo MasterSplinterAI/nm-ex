@@ -19,7 +19,7 @@ export async function addPurchaseAction(_p: ActionResult, fd: FormData): Promise
         reference: str(fd, "reference"),
       }),
     );
-    return `Recorded ${entry.kg} kg @ ${entry.gradePct}% Sn.`;
+    return `${entry.id} recorded · ${entry.kg} kg @ ${entry.gradePct}% Sn${entry.reference ? ` · your ref ${entry.reference}` : ""}.`;
   });
 }
 
@@ -28,7 +28,12 @@ export async function submitLotAction(_p: ActionResult, fd: FormData): Promise<A
     const session = await requireSession("supplier");
     const tier = num(fd, "tier") === 2 ? 2 : 1;
     const { lot, inspection } = await mutate(session.participantId, (s, ctx) =>
-      submitForInspection(s, ctx, { supplierId: session.participantId, tier, kg: num(fd, "kg") }),
+      submitForInspection(s, ctx, {
+        supplierId: session.participantId,
+        tier,
+        kg: num(fd, "kg"),
+        warehouse: str(fd, "warehouse"),
+      }),
     );
     return `${lot.id} submitted to ${inspection.warehouse}. Deliver the sample within 48 hours.`;
   });

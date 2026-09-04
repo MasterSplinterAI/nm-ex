@@ -34,7 +34,7 @@ export function DemoTab({ state, nowIso }: { state: DemoState; nowIso: string })
 
       <Panel kicker="Presentation controls" title="Reset scenario">
         <p className="text-sm text-[var(--ink-muted)]">
-          Rebuilds the seeded starting point: Solex at 980 kg, one lot awaiting sample, one 25 MT lot open to smelters, one refined lot
+          Rebuilds the seeded starting point: Musa & Son Ltd at 980 kg, one lot awaiting sample, one 25 MT lot open to smelters, one refined lot
           open to buyers, seven certificates on the register, Wamba Tin Shed pending review. Prices are re-snapshotted from the live board.
           Anything created during this session is discarded.
         </p>

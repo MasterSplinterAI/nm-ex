@@ -53,9 +53,13 @@ export function navCounts(state: DemoState, participantId: string, role: Role): 
     const activeLots = lots.filter(
       (l) => !["utilized", "sold_domestic", "smelted", "aggregated", "collected"].includes(l.status),
     ).length;
+    const ready = inv.tier1Kg >= state.policy.mmlTier1Kg || inv.tier2Kg >= state.policy.mmlTier2Kg;
+    const listed = lots.filter((l) => state.offers.some((o) => o.lotId === l.id)).length;
     return {
       ledger: inv.entries.length,
+      consolidate: ready ? 1 : 0,
       lots: activeLots,
+      listing: listed,
       certificates: state.certificates.filter((c) => c.supplierId === participantId).length,
     };
   }
@@ -97,8 +101,10 @@ export function navFor(role: Role, counts: NavCounts): NavItem[] {
     case "supplier":
       return [
         { id: "home", href: "/portal/supplier", label: "Dashboard" },
-        { id: "ledger", href: "/portal/supplier?tab=ledger", label: "Purchase ledger", badge: counts.ledger },
-        { id: "lots", href: "/portal/supplier?tab=lots", label: "My lots", badge: counts.lots },
+        { id: "ledger", href: "/portal/supplier?tab=ledger", label: "Purchase logs", badge: counts.ledger },
+        { id: "consolidate", href: "/portal/supplier?tab=consolidate", label: "Lot consolidation", badge: counts.consolidate },
+        { id: "lots", href: "/portal/supplier?tab=lots", label: "Assay & inspection", badge: counts.lots },
+        { id: "listing", href: "/portal/supplier?tab=listing", label: "National Pool", badge: counts.listing },
         { id: "certificates", href: "/portal/supplier?tab=certificates", label: "Certificates", badge: counts.certificates },
       ];
     case "buyer":

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { certificateNumber, lotId, parentLotId, regNo } from "./ids";
+import { certificateNumber, lotId, parentLotId, purchaseId, regNo } from "./ids";
 import type { DemoState } from "./types";
 
 function state(): Pick<DemoState, "counters"> {
@@ -23,4 +23,6 @@ test("lot, parent lot and registration numbers", () => {
   assert.equal(regNo(s, "supplier", 2026), "NMEX-SUP-2026-00001");
   assert.equal(regNo(s, "smelter", 2026), "NMEX-SMEL-2026-00001");
   assert.equal(regNo(s, "buyer", 2026), "NMEX-BUY-2026-00001");
+  assert.equal(purchaseId(s, 2026), "NMEX-PUR-2026-00001");
+  assert.equal(purchaseId(s, 2026), "NMEX-PUR-2026-00002");
 });

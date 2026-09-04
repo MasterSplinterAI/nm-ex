@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { ActionForm, inputClass } from "@/components/portal/action-button";
+import { ActionForm } from "@/components/portal/action-button";
+import { inputClass } from "@/components/portal/form-styles";
 import { PublicShell } from "@/components/portal/public-shell";
 import { CertStatusPill } from "@/components/portal/status-pill";
 import { FieldList } from "@/components/portal/field-list";

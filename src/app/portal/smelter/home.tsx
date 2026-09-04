@@ -1,84 +1,107 @@
-import { DashCard } from "@/components/portal/dash-card";
-import { Panel } from "@/components/portal/panel";
+import { KpiTile, StatusTile } from "@/components/portal/kpi-tile";
 import { LotStatusPill } from "@/components/portal/status-pill";
+import { WelcomeBanner } from "@/components/portal/welcome-banner";
 import { formatKg, formatNgn, formatNgnCompact, formatPct } from "@/lib/format";
 import { smelterVisibility } from "@/lib/dmo/reports";
 import type { DemoState, Participant } from "@/lib/dmo/types";
 
-export function SmelterHome({ state, me }: { state: DemoState; me: Participant }) {
+export function SmelterHome({ state, me, nowIso }: { state: DemoState; me: Participant; nowIso: string }) {
   const v = smelterVisibility(state, me.id);
+  const actionNeeded = v.pendingPayment > 0 || v.poolLots > 0;
+
   return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--forest)]">Qualified domestic smelter</p>
-        <h1 className="font-display mt-1 text-2xl tracking-tight sm:text-3xl">{me.legalName}</h1>
-        <p className="mt-1 max-w-2xl text-sm text-[var(--ink-muted)]">
-          Registration {me.regNo}. First right of acceptance on every verified concentrate lot in Nigeria. This page is the plant
-          position — pool, settlement, inventory, furnace and royalty — in one view.
-        </p>
-      </div>
+    <div className="space-y-5">
+      <WelcomeBanner name={me.legalName} nowIso={nowIso} />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <DashCard href="/portal/smelter?tab=pool" kicker="Market" title="Lots in the National Pool" value={v.poolLots} hint="Verified concentrate offered to you before it can be exported." tone={v.poolLots ? "ok" : "ink"} />
-        <DashCard href="/portal/smelter?tab=acceptances" kicker="Settlement" title="Awaiting payment" value={v.pendingPayment} hint={v.pendingCollection ? `${v.pendingCollection} paid, collection pending.` : "Pay within five days of acceptance."} tone={v.pendingPayment ? "warn" : "ink"} />
-        <DashCard href="/portal/smelter?tab=inventory" kicker="Plant" title="Collected inventory" value={formatKg(v.inventoryKg)} hint={`${formatKg(v.inventoryContainedKg)} contained tin ready to aggregate.`} />
-        <DashCard href="/portal/smelter?tab=certificates" kicker="Fiscal" title="Royalty you hold" value={formatNgnCompact(v.royaltyHeldNgn)} hint={`${formatNgn(v.royaltyHeldNgn)} transferred at ₦0 on each DMO-A. Reconciled on refined export or domestic sale.`} tone="warn" />
+        <KpiTile href="/portal/smelter?tab=pool" icon="pool" label="National Pool" value={v.poolLots} hint="Verified concentrate offered before export." />
+        <KpiTile href="/portal/smelter?tab=acceptances" icon="money" label="Awaiting payment" value={v.pendingPayment} hint={v.pendingCollection ? `${v.pendingCollection} paid, collection pending.` : "Pay within five days of acceptance."} />
+        <KpiTile href="/portal/smelter?tab=inventory" icon="plant" label="Collected inventory" value={formatKg(v.inventoryKg)} hint={`${formatKg(v.inventoryContainedKg)} contained tin.`} />
+        <StatusTile
+          href={v.pendingPayment ? "/portal/smelter?tab=acceptances" : "/portal/smelter?tab=pool"}
+          label="Plant action"
+          ok={!actionNeeded}
+          okText="No settlement waiting — plant is current"
+          waitText={v.pendingPayment ? `${v.pendingPayment} lot${v.pendingPayment === 1 ? "" : "s"} waiting for payment` : `${v.poolLots} lot${v.poolLots === 1 ? "" : "s"} open in the National Pool`}
+        />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <DashCard href="/portal/smelter?tab=inventory" kicker="Plant" title="Parent lots" value={v.parentLots} hint={`${formatKg(v.unsmeltedContainedKg)} Sn not yet smelted.`} />
-        <DashCard href="/portal/smelter?tab=refined" kicker="Plant" title="Refined output" value={formatKg(v.refinedKg)} hint={v.recoveryWeighted != null ? `Weighted recovery ${formatPct(v.recoveryWeighted, 1)} across campaigns.` : "Register a campaign after you aggregate."} />
-        <DashCard href="/portal/smelter?tab=pool" kicker="Market" title="Accept at board price" hint={`Domestic purchase is government reference × ${state.policy.coefToSmelter}. Price locks when you accept.`} />
-      </div>
-
-      <Panel kicker="Feed to metal" title="Your concentrate lots — chain of custody">
-        <p className="mb-4 text-sm text-[var(--ink-muted)]">
-          Every child lot you accepted, from DMO-A through collection, parent lot and furnace. Nothing is overwritten; each step is an
-          audit event.
-        </p>
-        {v.childLots.length === 0 ? (
-          <p className="text-sm text-[var(--ink-muted)]">No accepted lots yet. Open the National Pool to take the first one.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="text-left text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
-                <tr>
-                  <th className="pb-2 font-semibold">Child lot</th>
-                  <th className="pb-2 text-right font-semibold">Weight</th>
-                  <th className="pb-2 text-right font-semibold">Grade</th>
-                  <th className="pb-2 text-right font-semibold">Contained Sn</th>
-                  <th className="pb-2 font-semibold">Parent lot</th>
-                  <th className="pb-2 font-semibold">DMO-A</th>
-                  <th className="pb-2 text-right font-semibold">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--line)]">
-                {v.childLots.map((l) => (
-                  <tr key={l.id}>
-                    <td className="py-2 tabular-nums">{l.id}</td>
-                    <td className="py-2 text-right tabular-nums">{formatKg(l.kg)}</td>
-                    <td className="py-2 text-right tabular-nums">{formatPct(l.gradePct, 2)}</td>
-                    <td className="py-2 text-right tabular-nums">{formatKg(l.kg * (l.gradePct / 100))}</td>
-                    <td className="py-2 tabular-nums text-[var(--ink-muted)]">{l.parentLotId ?? "—"}</td>
-                    <td className="py-2 tabular-nums">
-                      {l.certNo ? (
-                        <a href={`/certificates/${l.certNo}`} className="underline-offset-4 hover:underline">
-                          {l.certNo}
-                        </a>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                    <td className="py-2 text-right">
-                      <LotStatusPill status={l.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <div className="grid gap-4 xl:grid-cols-[1fr_20rem]">
+        <section className="portal-card overflow-hidden">
+          <div className="flex items-end justify-between gap-3 border-b border-[var(--line)] px-5 py-4">
+            <div>
+              <h2 className="font-display text-lg">Concentrate lots — chain of custody</h2>
+              <p className="text-xs text-[var(--ink-muted)]">Every child lot you accepted, from DMO-A through the furnace</p>
+            </div>
+            <a href="/portal/smelter?tab=inventory" className="text-sm font-semibold text-[var(--forest)] hover:underline">
+              Open inventory
+            </a>
           </div>
-        )}
-      </Panel>
+          {v.childLots.length === 0 ? (
+            <p className="px-5 py-8 text-sm text-[var(--ink-muted)]">No accepted lots yet. Open the National Pool to take the first one.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-left text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+                  <tr>
+                    <th className="px-5 pb-2 pt-3 font-semibold">Child lot</th>
+                    <th className="pb-2 pt-3 text-right font-semibold">Weight</th>
+                    <th className="pb-2 pt-3 text-right font-semibold">Grade</th>
+                    <th className="pb-2 pt-3 text-right font-semibold">Contained Sn</th>
+                    <th className="pb-2 pt-3 font-semibold">Parent</th>
+                    <th className="px-5 pb-2 pt-3 text-right font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--line)]">
+                  {v.childLots.map((l) => (
+                    <tr key={l.id}>
+                      <td className="px-5 py-2.5 tabular-nums">{l.id}</td>
+                      <td className="py-2.5 text-right tabular-nums">{formatKg(l.kg)}</td>
+                      <td className="py-2.5 text-right tabular-nums">{formatPct(l.gradePct, 2)}</td>
+                      <td className="py-2.5 text-right tabular-nums">{formatKg(l.kg * (l.gradePct / 100))}</td>
+                      <td className="py-2.5 tabular-nums text-[var(--ink-muted)]">{l.parentLotId ?? "—"}</td>
+                      <td className="px-5 py-2.5 text-right">
+                        <LotStatusPill status={l.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        <section className="portal-card flex flex-col p-5">
+          <h2 className="font-display text-lg">Plant position</h2>
+          <dl className="mt-4 space-y-3 text-sm">
+            <div className="flex justify-between gap-3">
+              <dt className="text-[var(--ink-muted)]">Parent lots</dt>
+              <dd className="tabular-nums font-semibold">{v.parentLots}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-[var(--ink-muted)]">Unsmelted Sn</dt>
+              <dd className="tabular-nums font-semibold">{formatKg(v.unsmeltedContainedKg)}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-[var(--ink-muted)]">Refined output</dt>
+              <dd className="tabular-nums font-semibold">{formatKg(v.refinedKg)}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-[var(--ink-muted)]">Royalty you hold</dt>
+              <dd className="tabular-nums font-semibold">{formatNgnCompact(v.royaltyHeldNgn)}</dd>
+            </div>
+          </dl>
+          <p className="mt-4 text-xs text-[var(--ink-muted)]">
+            {formatNgn(v.royaltyHeldNgn)} transferred at ₦0 on each DMO-A. Domestic purchase is reference × {state.policy.coefToSmelter}.
+          </p>
+          <a
+            href="/portal/smelter?tab=pool"
+            className="mt-auto inline-flex h-11 items-center justify-center rounded-lg bg-[#1b4d38] px-4 text-sm font-semibold text-white hover:bg-[#163d2c]"
+          >
+            Open the National Pool →
+          </a>
+        </section>
+      </div>
     </div>
   );
 }
