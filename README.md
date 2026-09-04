@@ -16,6 +16,38 @@ Public spot reference board for Nigeria's principal mineral exports, with USD pr
   - **SMM tables**: Gold (99.99% USD/oz), Tantalite (30% Ta₂O₅ CIF USD/lb)
   - **xe.com** for USD → NGN
 
+## DMO demo platform
+
+A scripted, role-based demonstration of the Domestic Market Offer (DMO) operating model: registration → purchase ledger → minimum marketable lot → inspection and assay → National Pool → smelter acceptance (DMO-A) or export clearance (DMO-EC / DMO-ER) → aggregation → refined re-offer → NESS / Customs verification.
+
+- `/exchange` — new landing page (kept separate from `/` so the two can be compared)
+- `/register` — role-based onboarding with category-specific document checklists
+- `/login` — one-click sign-in; cards grouped as market ports vs government / appointed agencies
+- `/portal/…` — ERP-style shell (collapsible sidebar on desktop, hamburger drawer on mobile). Each role lands on a card dashboard and drills into queues, lots and reports
+- `/portal/admin?tab=reports` — national contained-tin pipeline, royalty by holder, expandable lot and participant registers
+- `/certificates/<no>` — full certificate with QR (parties, officers and verifiers only); `/verify?no=` — public status check
+
+Design: `docs/superpowers/specs/2026-09-04-dmo-demo-platform-design.md`. Plan: `docs/superpowers/plans/2026-09-04-dmo-demo-platform.md`.
+
+Prices are never fixed. Every offer shows indicative values from the live board; each certificate snapshots LME and FX at the moment it is issued.
+
+**Seeded accounts** (all use `DEMO_PASSWORD`, default `nmex-demo`; one-click sign-in unless `DEMO_ONE_CLICK=false`):
+
+| Role | Account | Registration |
+| --- | --- | --- |
+| Supplier | Musa & Son Ltd | NMEX-SUP-2026-00456 |
+| Smelter | United Smelters Ltd | NMEX-SMEL-2026-00015 |
+| Domestic buyer | Lagos Solder Works Ltd | NMEX-BUY-2026-00102 |
+| NM-EX officer | NM-EX Compliance & Market Operations | — |
+| Verifier | Nairobi Inspection Services | — |
+| Pending applicant | Wamba Tin Shed | awaiting review |
+
+**QR / reuse lock:** a scan of `/verify?no=` shows live status. An appointed NESS / Customs verifier signs in and marks the clearance **utilized**; that status is terminal and the same number cannot support a second shipment.
+
+**Suggested walkthrough** (≈15 minutes): `/exchange` → `/verify` with `NMEX-DMO-EC-TINC-2026-00021` (then sign in as Nairobi to mark utilized) → officer dashboard cards and Traceability report → register a tin shed → officer approves it → Musa & Son Ltd adds a 50 kg purchase, the MML button unlocks, submit → officer marks sample received and enters the assay → United accepts the 25 MT lot in the National Pool (DMO-A issues) → pay, collect, create a parent lot, register refined output → Lagos Solder buys refined tin → officer advances the clock 120 h → reset.
+
+Demo state lives in `data/demo.json` locally and `/var/lib/nm-ex/demo.json` in production (`NM_EX_DEMO_PATH` overrides). Delete it or use **Demo controls → Reset** to rebuild the seed. Run `npm test` for the valuation, state-machine and seed tests.
+
 ## Develop
 
 ```bash
@@ -39,6 +71,7 @@ Host: `ubuntu@3.16.210.84` (shared with JarMetals / Cornerstone).
 - Nginx: `nm-ex.com` / `www.nm-ex.com`
 - Persistent prices: `/var/lib/nm-ex/spot.json`
 - Tin policy (benchmark / royalty): `/var/lib/nm-ex/policy.json` or env `TIN_BENCHMARK_PCT`, `GOVERNMENT_ROYALTY_PCT`
+- DMO demo state: `/var/lib/nm-ex/demo.json`; env `DEMO_PASSWORD`, `DEMO_SESSION_SECRET`, `NM_EX_PUBLIC_URL` (QR base, default `https://www.nm-ex.com`)
 - Auto-deploy: push to `main` → GitHub Actions → SSH runs `/opt/deployment/deploy-nm-ex.sh`
 
 Manual deploy on the server:

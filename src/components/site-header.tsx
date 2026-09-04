@@ -19,6 +19,18 @@ export function SiteHeader() {
             <a href="#tin" className="min-h-10 inline-flex items-center transition hover:text-[var(--ink)]">
               Tin
             </a>
+            <a href="/exchange" className="hidden min-h-10 items-center transition hover:text-[var(--ink)] sm:inline-flex">
+              Exchange
+            </a>
+            <a href="/verify" className="hidden min-h-10 items-center transition hover:text-[var(--ink)] sm:inline-flex">
+              Verify
+            </a>
+            <a href="/register" className="hidden min-h-10 items-center transition hover:text-[var(--ink)] sm:inline-flex">
+              Register
+            </a>
+            <a href="/login" className="min-h-10 inline-flex items-center font-semibold text-[var(--ink)] transition hover:text-[var(--forest)]">
+              Login
+            </a>
             <span className="hidden text-[var(--ink)]/35 min-[380px]:inline">|</span>
             <LiveClock className="hidden text-[var(--ink)] min-[380px]:inline" />
           </nav>
