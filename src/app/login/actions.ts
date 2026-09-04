@@ -21,5 +21,7 @@ export async function loginAs(_prev: ActionResult, formData: FormData): Promise<
     };
   }
   await createSession(participant.id, participant.role);
+  const next = String(formData.get("next") ?? "");
+  if (next.startsWith("/") && !next.startsWith("//")) redirect(next);
   redirect(roleHome(participant.role));
 }

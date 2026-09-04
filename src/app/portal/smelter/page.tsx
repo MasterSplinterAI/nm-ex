@@ -6,26 +6,27 @@ import { Money } from "@/components/portal/money";
 import { Panel } from "@/components/portal/panel";
 import { PoolCard } from "@/components/portal/pool-card";
 import { CertStatusPill, LotStatusPill, StatusPill } from "@/components/portal/status-pill";
-import { Tabs } from "@/components/portal/tabs";
 import { formatDate, formatDateTime, formatKg, formatNgn, formatPct } from "@/lib/format";
 import { demoNowIso } from "@/lib/dmo/clock";
+import { tabFromSearch } from "@/lib/dmo/nav";
 import { acceptancesFor, certificatesFor, lotsFor, offerForLot, participantById, poolFor, royaltyLedgerFor } from "@/lib/dmo/queries";
 import { getSession } from "@/lib/dmo/session";
 import { readState } from "@/lib/dmo/store";
 import { readSpotBoard } from "@/lib/store";
 import { PageHeader } from "../page-header";
 import { acceptOfferAction, collectAction, createParentLotAction, payAction, registerRefinedAction } from "./actions";
+import { SmelterHome } from "./home";
 
 export const dynamic = "force-dynamic";
 
-const TABS = ["pool", "acceptances", "inventory", "refined", "certificates"] as const;
+const TABS = ["home", "pool", "acceptances", "inventory", "refined", "certificates"] as const;
 type TabId = (typeof TABS)[number];
 
 export default async function SmelterPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const session = await getSession();
   if (!session || session.role !== "smelter") redirect("/portal");
   const { tab } = await searchParams;
-  const active: TabId = TABS.includes(tab as TabId) ? (tab as TabId) : "pool";
+  const active: TabId = TABS.includes(tabFromSearch(tab) as TabId) ? (tabFromSearch(tab) as TabId) : "home";
 
   const [state, board] = await Promise.all([readState(), readSpotBoard()]);
   const me = participantById(state, session.participantId)!;
@@ -33,7 +34,6 @@ export default async function SmelterPage({ searchParams }: { searchParams: Prom
   const lme = board.minerals.find((m) => m.slug === "tin")?.lastUsd ?? 0;
   const pool = poolFor(state, "smelters");
   const acceptances = acceptancesFor(state, me.id);
-  const pendingSettle = acceptances.filter((a) => a.collectionStatus !== "collected" && state.certificates.find((c) => c.certNo === a.certNo)?.status !== "CANCELLED");
   const collected = state.lots.filter((l) => l.status === "collected" && acceptances.some((a) => a.lotId === l.id));
   const parents = state.parentLots.filter((p) => p.smelterId === me.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const unsmelted = parents.filter((p) => !p.campaignId);
@@ -43,22 +43,24 @@ export default async function SmelterPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageHeader
-        kicker="Qualified domestic smelter"
-        title={me.legalName}
-        lede={<>Registration {me.regNo}. First right of acceptance on every verified concentrate lot in Nigeria, at the government reference × {state.policy.coefToSmelter}.</>}
-      />
-      <Tabs
-        base="/portal/smelter"
-        active={active}
-        tabs={[
-          { id: "pool", label: "National Pool", badge: pool.length },
-          { id: "acceptances", label: "My acceptances", badge: pendingSettle.length },
-          { id: "inventory", label: "Inventory & aggregation", badge: collected.length },
-          { id: "refined", label: "Refined output", badge: unsmelted.length },
-          { id: "certificates", label: "Certificates & royalty", badge: certs.length },
-        ]}
-      />
+      {active === "home" && <SmelterHome state={state} me={me} />}
+      {active !== "home" && (
+        <PageHeader
+          kicker="Qualified domestic smelter"
+          title={
+            active === "pool"
+              ? "National Pool"
+              : active === "acceptances"
+                ? "Acceptances"
+                : active === "inventory"
+                  ? "Inventory & aggregation"
+                  : active === "refined"
+                    ? "Refined output"
+                    : "Certificates & royalty"
+          }
+          lede={me.regNo ?? undefined}
+        />
+      )}
 
       {active === "pool" && (
         <div className="space-y-4">

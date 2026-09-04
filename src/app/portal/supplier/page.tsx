@@ -5,9 +5,9 @@ import { Empty } from "@/components/portal/empty";
 import { Money } from "@/components/portal/money";
 import { Panel } from "@/components/portal/panel";
 import { CertStatusPill, LotStatusPill } from "@/components/portal/status-pill";
-import { Tabs } from "@/components/portal/tabs";
 import { formatDate, formatDateTime, formatKg, formatNgn, formatPct } from "@/lib/format";
 import { demoNowIso } from "@/lib/dmo/clock";
+import { tabFromSearch } from "@/lib/dmo/nav";
 import { CERT_CLASS_LABEL } from "@/lib/dmo/labels";
 import { mmlKgForTier } from "@/lib/dmo/policy";
 import { certificatesFor, inspectionForLot, inventoryFor, lotsFor, offerForLot, participantById } from "@/lib/dmo/queries";
@@ -17,16 +17,18 @@ import { referenceValueNgn } from "@/lib/dmo/valuation";
 import { readSpotBoard } from "@/lib/store";
 import { PageHeader } from "../page-header";
 import { addPurchaseAction, submitLotAction } from "./actions";
+import { SupplierHome } from "./home";
 
 export const dynamic = "force-dynamic";
 
-type TabId = "ledger" | "lots" | "certificates";
+type TabId = "home" | "ledger" | "lots" | "certificates";
 
 export default async function SupplierPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const session = await getSession();
   if (!session || session.role !== "supplier") redirect("/portal");
   const { tab } = await searchParams;
-  const active: TabId = tab === "lots" || tab === "certificates" ? tab : "ledger";
+  const raw = tabFromSearch(tab);
+  const active: TabId = raw === "lots" || raw === "certificates" || raw === "ledger" ? raw : "home";
 
   const [state, board] = await Promise.all([readState(), readSpotBoard()]);
   const me = participantById(state, session.participantId)!;
@@ -37,24 +39,17 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
   const lme = board.minerals.find((m) => m.slug === "tin")?.lastUsd ?? 0;
   const mml1 = mmlKgForTier(1, state.policy);
   const mml2 = mmlKgForTier(2, state.policy);
-  const activeLots = lots.filter((l) => !["utilized", "sold_domestic", "smelted", "aggregated", "collected"].includes(l.status));
 
   return (
     <>
-      <PageHeader
-        kicker="Supplier dashboard"
-        title={me.legalName}
-        lede={<>Registration {me.regNo}. Log every purchase; when eligible inventory reaches the minimum marketable lot, submit it for NM-EX verification.</>}
-      />
-      <Tabs
-        base="/portal/supplier"
-        active={active}
-        tabs={[
-          { id: "ledger", label: "Purchase ledger", badge: inv.entries.length },
-          { id: "lots", label: "My lots", badge: activeLots.length },
-          { id: "certificates", label: "Certificates", badge: certs.length },
-        ]}
-      />
+      {active === "home" && <SupplierHome state={state} me={me} />}
+      {active !== "home" && (
+        <PageHeader
+          kicker="Supplier"
+          title={active === "ledger" ? "Purchase ledger" : active === "lots" ? "My lots" : "Certificates"}
+          lede={me.regNo ?? undefined}
+        />
+      )}
 
       {active === "ledger" && (
         <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">

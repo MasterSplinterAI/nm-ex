@@ -4,15 +4,16 @@ import { Money } from "@/components/portal/money";
 import { Panel } from "@/components/portal/panel";
 import { PoolCard } from "@/components/portal/pool-card";
 import { CertStatusPill } from "@/components/portal/status-pill";
-import { Tabs } from "@/components/portal/tabs";
 import { formatDateTime, formatKg, formatPct } from "@/lib/format";
 import { demoNowIso } from "@/lib/dmo/clock";
+import { tabFromSearch } from "@/lib/dmo/nav";
 import { acceptancesFor, participantById, poolFor } from "@/lib/dmo/queries";
 import { getSession } from "@/lib/dmo/session";
 import { readState } from "@/lib/dmo/store";
 import { readSpotBoard } from "@/lib/store";
 import { PageHeader } from "../page-header";
 import { acceptOfferAction } from "../smelter/actions";
+import { BuyerHome } from "./home";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,8 @@ export default async function BuyerPage({ searchParams }: { searchParams: Promis
   const session = await getSession();
   if (!session || session.role !== "buyer") redirect("/portal");
   const { tab } = await searchParams;
-  const active = tab === "purchases" ? "purchases" : "pool";
+  const raw = tabFromSearch(tab);
+  const active = raw === "purchases" || raw === "pool" ? raw : "home";
 
   const [state, board] = await Promise.all([readState(), readSpotBoard()]);
   const me = participantById(state, session.participantId)!;
@@ -31,19 +33,14 @@ export default async function BuyerPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <PageHeader
-        kicker="Domestic end user"
-        title={me.legalName}
-        lede={<>Registration {me.regNo}. Refined Nigerian tin is offered to domestic industry for {state.policy.offerPeriodDays} days before any export clearance can issue.</>}
-      />
-      <Tabs
-        base="/portal/buyer"
-        active={active}
-        tabs={[
-          { id: "pool", label: "Refined tin offered", badge: pool.length },
-          { id: "purchases", label: "My purchases", badge: purchases.length },
-        ]}
-      />
+      {active === "home" && <BuyerHome state={state} me={me} />}
+      {active !== "home" && (
+        <PageHeader
+          kicker="Domestic end user"
+          title={active === "pool" ? "Refined tin offered" : "My purchases"}
+          lede={me.regNo ?? undefined}
+        />
+      )}
 
       {active === "pool" && (
         <div className="space-y-4">

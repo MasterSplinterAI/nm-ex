@@ -14,32 +14,39 @@ const BLURB: Record<Participant["role"], string> = {
   verifier: "Confirm a DMO certificate by number or QR before issuing CCI or clearing export.",
 };
 
+const GROUP: { title: string; roles: Participant["role"][] }[] = [
+  { title: "Market ports", roles: ["supplier", "smelter", "buyer"] },
+  { title: "Government & appointed agencies", roles: ["officer", "verifier"] },
+];
+
 export function LoginCards({
   participants,
   oneClickPassword,
+  next,
 }: {
   participants: Participant[];
   oneClickPassword: string | null;
+  next?: string | null;
 }) {
   const [state, action, pending] = useActionState(loginAs, null);
 
   return (
     <div className="space-y-10">
-      <div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--forest)]">
-          Demonstration accounts
-        </p>
-        <p className="mt-1 text-sm text-[var(--ink-muted)]">
-          Choose a participant to open their dashboard. Each role sees only what its permissions allow.
-        </p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {participants.map((p) => (
+      {GROUP.map((group) => {
+        const cards = participants.filter((p) => group.roles.includes(p.role));
+        if (cards.length === 0) return null;
+        return (
+          <div key={group.title}>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--forest)]">{group.title}</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {cards.map((p) => (
             <form
               key={p.id}
               action={action}
               className="flex flex-col border border-[var(--line)] bg-white/70 p-4 transition hover:border-[var(--forest)]"
             >
               <input type="hidden" name="participantId" value={p.id} />
+              {next && <input type="hidden" name="next" value={next} />}
               {oneClickPassword != null && <input type="hidden" name="password" value={oneClickPassword} />}
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">
                 {ROLE_SHORT[p.role]}
@@ -61,17 +68,19 @@ export function LoginCards({
                 disabled={pending}
                 pendingText="Signing in…"
               >
-                {p.status === "approved" ? "Sign in" : "Pending approval"}
+                {p.status === "approved" ? "Open dashboard" : "Pending approval"}
               </ActionButton>
             </form>
-          ))}
-        </div>
-        {state?.error && (
-          <p className="mt-4 text-sm text-[#9b2c2c]" role="alert">
-            {state.error}
-          </p>
-        )}
-      </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+      {state?.error && (
+        <p className="text-sm text-[#9b2c2c]" role="alert">
+          {state.error}
+        </p>
+      )}
     </div>
   );
 }

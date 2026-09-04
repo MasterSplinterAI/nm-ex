@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { PortalShell } from "@/components/portal/shell";
 import { demoNowIso } from "@/lib/dmo/clock";
+import { navCounts, navFor } from "@/lib/dmo/nav";
 import { getSession } from "@/lib/dmo/session";
 import { readState } from "@/lib/dmo/store";
-import { PortalNav } from "./portal-nav";
 
 export const dynamic = "force-dynamic";
 
@@ -13,14 +15,13 @@ export default async function PortalLayout({ children }: { children: ReactNode }
   const state = await readState();
   const participant = state.participants.find((p) => p.id === session.participantId);
   if (!participant || participant.status !== "approved") redirect("/login");
+  const nav = navFor(session.role, navCounts(state, session.participantId, session.role));
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[var(--paper)] text-[var(--ink)]">
-      <PortalNav participant={participant} demoNowIso={demoNowIso(state)} clockOffsetMs={state.clockOffsetMs} />
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-8 sm:py-8">{children}</main>
-      <footer className="border-t border-[var(--line)] px-4 py-4 text-center text-xs text-[var(--ink-muted)]">
-        NM-EX participant portal · demonstration environment · the live NM-EX record is authoritative
-      </footer>
-    </div>
+    <Suspense fallback={<div className="min-h-dvh bg-[var(--paper)]" />}>
+      <PortalShell participant={participant} nav={nav} demoNowIso={demoNowIso(state)} clockOffsetMs={state.clockOffsetMs}>
+        {children}
+      </PortalShell>
+    </Suspense>
   );
 }
