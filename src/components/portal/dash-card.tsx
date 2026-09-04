@@ -28,13 +28,13 @@ export function DashCard({
   return (
     <a
       href={href}
-      className="group flex flex-col border border-[var(--line)] bg-white/80 p-4 transition hover:border-[var(--forest)] hover:bg-white"
+      className="group flex min-w-0 flex-col border border-[var(--line)] bg-white/80 p-4 transition hover:border-[var(--forest)] hover:bg-white"
     >
       <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">{kicker}</p>
-      <div className="mt-2 flex items-end justify-between gap-3">
-        <h3 className="font-display text-lg leading-tight text-[var(--ink)] group-hover:text-[var(--forest)]">{title}</h3>
-        {value != null && <p className={`font-display text-3xl tabular-nums leading-none ${valueColor}`}>{value}</p>}
-      </div>
+      <h3 className="font-display mt-2 text-lg leading-tight text-[var(--ink)] group-hover:text-[var(--forest)]">{title}</h3>
+      {value != null && (
+        <p className={`font-display mt-2 break-words text-2xl tabular-nums leading-tight sm:text-3xl ${valueColor}`}>{value}</p>
+      )}
       {hint && <p className="mt-2 text-sm leading-relaxed text-[var(--ink-muted)]">{hint}</p>}
       {children}
       <p className="mt-3 text-xs font-semibold text-[var(--forest)]">Open →</p>

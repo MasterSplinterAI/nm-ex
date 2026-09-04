@@ -43,6 +43,17 @@ export function formatNgn(value: number | null): string {
   return ngn.format(value);
 }
 
+/** Short naira for dashboard cards — ₦217m instead of a clipped ₦216,599,880. */
+export function formatNgnCompact(value: number | null): string {
+  if (value == null || Number.isNaN(value)) return "—";
+  const abs = Math.abs(value);
+  const sign = value < 0 ? "−" : "";
+  if (abs >= 1_000_000_000) return `${sign}₦${(abs / 1_000_000_000).toFixed(2)}bn`;
+  if (abs >= 1_000_000) return `${sign}₦${(abs / 1_000_000).toFixed(1)}m`;
+  if (abs >= 1_000) return `${sign}₦${(abs / 1_000).toFixed(0)}k`;
+  return ngn.format(value);
+}
+
 export function formatNgnPrecise(value: number | null): string {
   if (value == null || Number.isNaN(value)) return "—";
   return ngnPrecise.format(value);

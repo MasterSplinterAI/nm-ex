@@ -2,7 +2,7 @@ import { DashCard } from "@/components/portal/dash-card";
 import { Panel } from "@/components/portal/panel";
 import { Pipeline } from "@/components/portal/pipeline";
 import { CertStatusPill } from "@/components/portal/status-pill";
-import { formatDateTime, formatFxRate, formatMt, formatNgn, formatUsd } from "@/lib/format";
+import { formatDateTime, formatFxRate, formatMt, formatNgn, formatNgnCompact, formatUsd } from "@/lib/format";
 import { CERT_CLASS_LABEL } from "@/lib/dmo/labels";
 import { inspectionQueue, openOffers, pendingAcceptances, pendingRegistrations } from "@/lib/dmo/queries";
 import { containedTinMt, nationalPipeline } from "@/lib/dmo/reports";
@@ -44,8 +44,8 @@ export function AdminHome({ state, board, nowIso }: { state: DemoState; board: S
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <DashCard href="/portal/admin?tab=reports" kicker="Position" title="Tin in the system" value={formatMt(mass.inSystem * 1000)} hint={`${formatMt(mass.exported * 1000)} already exported · ${formatMt(mass.domestic * 1000)} sold domestically.`} />
-        <DashCard href="/portal/admin?tab=reports" kicker="Fiscal" title="Royalty due at export" value={formatNgn(royaltyDue)} hint="On valid unused clearance certificates." tone="warn" />
-        <DashCard href="/portal/admin?tab=reports" kicker="Fiscal" title="Royalty held by smelters" value={formatNgn(royaltyHeld)} hint="Transferred at ₦0 on DMO-A; reconciled on refined output." tone="ok" />
+        <DashCard href="/portal/admin?tab=reports" kicker="Fiscal" title="Royalty due at export" value={formatNgnCompact(royaltyDue)} hint={`${formatNgn(royaltyDue)} on valid unused clearance certificates.`} tone="warn" />
+        <DashCard href="/portal/admin?tab=reports" kicker="Fiscal" title="Royalty held by smelters" value={formatNgnCompact(royaltyHeld)} hint={`${formatNgn(royaltyHeld)} transferred at ₦0 on DMO-A; reconciled on refined output.`} tone="ok" />
         <DashCard href="/portal/admin?tab=certificates" kicker="Register" title="Certificates issued" value={state.certificates.length} hint="DMO-A, DMO-EC and DMO-ER on the live register." />
       </div>
 

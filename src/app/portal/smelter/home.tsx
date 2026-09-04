@@ -1,7 +1,7 @@
 import { DashCard } from "@/components/portal/dash-card";
 import { Panel } from "@/components/portal/panel";
 import { LotStatusPill } from "@/components/portal/status-pill";
-import { formatKg, formatNgn, formatPct } from "@/lib/format";
+import { formatKg, formatNgn, formatNgnCompact, formatPct } from "@/lib/format";
 import { smelterVisibility } from "@/lib/dmo/reports";
 import type { DemoState, Participant } from "@/lib/dmo/types";
 
@@ -22,7 +22,7 @@ export function SmelterHome({ state, me }: { state: DemoState; me: Participant }
         <DashCard href="/portal/smelter?tab=pool" kicker="Market" title="Lots in the National Pool" value={v.poolLots} hint="Verified concentrate offered to you before it can be exported." tone={v.poolLots ? "ok" : "ink"} />
         <DashCard href="/portal/smelter?tab=acceptances" kicker="Settlement" title="Awaiting payment" value={v.pendingPayment} hint={v.pendingCollection ? `${v.pendingCollection} paid, collection pending.` : "Pay within five days of acceptance."} tone={v.pendingPayment ? "warn" : "ink"} />
         <DashCard href="/portal/smelter?tab=inventory" kicker="Plant" title="Collected inventory" value={formatKg(v.inventoryKg)} hint={`${formatKg(v.inventoryContainedKg)} contained tin ready to aggregate.`} />
-        <DashCard href="/portal/smelter?tab=certificates" kicker="Fiscal" title="Royalty you hold" value={formatNgn(v.royaltyHeldNgn)} hint="Transferred at ₦0 on each DMO-A. Reconciled on refined export or domestic sale." tone="warn" />
+        <DashCard href="/portal/smelter?tab=certificates" kicker="Fiscal" title="Royalty you hold" value={formatNgnCompact(v.royaltyHeldNgn)} hint={`${formatNgn(v.royaltyHeldNgn)} transferred at ₦0 on each DMO-A. Reconciled on refined export or domestic sale.`} tone="warn" />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
