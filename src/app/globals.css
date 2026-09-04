@@ -95,3 +95,21 @@ body {
     animation: none;
   }
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  body {
+    background: #fff !important;
+  }
+  header,
+  footer.site-footer,
+  .print\:hidden {
+    display: none !important;
+  }
+  .certificate {
+    break-inside: avoid;
+  }
+}
