@@ -885,6 +885,7 @@ export function actorLabel(state: DemoState, actorId: string): string {
 import type {
   CertificateClass,
   CertificateStatus,
+  LotKind,
   LotStatus,
   ParticipantCategory,
   ParticipantStatus,
@@ -920,13 +921,18 @@ export const CERT_STATUS_LABEL: Record<CertificateStatus, string> = {
   SUPERSEDED: "Superseded",
 };
 
-export function certClassTitle(cls: CertificateClass): { title: string; subtitle: string; banner: string } {
+export function certClassTitle(
+  cls: CertificateClass,
+  kind: LotKind,
+): { title: string; subtitle: string; banner: string } {
   switch (cls) {
     case "DMO-A":
       return {
         title: "Domestic-Offer-First Acceptance Certificate",
-        subtitle: "Tin Concentrate",
-        banner: "SOLD TO QUALIFIED DOMESTIC SMELTER",
+        subtitle: kind === "concentrate" ? "Tin Concentrate" : "Refined Tin / Tin Ingot",
+        banner: kind === "concentrate"
+          ? "SOLD TO QUALIFIED DOMESTIC SMELTER"
+          : "SOLD TO QUALIFIED DOMESTIC BUYER",
       };
     case "DMO-EC":
       return {
@@ -999,7 +1005,7 @@ git commit -m "Add DMO identifiers, demo clock, board price snapshots, audit log
   - `markSampleReceived(state, ctx, { inspectionId })`
   - `verifyLot(state, ctx, { inspectionId, verifiedKg, verifiedGradePct }): Lot` — locks assay, snapshots `assayPriceRef`, opens the offer (audience by kind)
   - `openOffer(state, ctx, { lotId }): Offer` (used by verifyLot and by refined-lot registration)
-  - `acceptOffer(state, ctx, { offerId, acceptorId }): { acceptance: Acceptance; certificate: Certificate }` — DMO-A for concentrate; for refined lots creates a domestic sale (lot → `sold_domestic`) with no certificate class (record acceptance only; `certNo` = "" is not allowed, so refined acceptances issue a `DMO-A` too — same class, subtitle "Refined Tin / Tin Ingot"). Update `certClassTitle` in labels to accept `kind` and switch subtitle. **Decision: refined domestic sale also issues DMO-A.**
+  - `acceptOffer(state, ctx, { offerId, acceptorId }): { acceptance: Acceptance; certificate: Certificate }` — issues a DMO-A for both concentrate (lot → `payment_pending`) and refined lots (lot → `sold_domestic`); the certificate subtitle comes from `certClassTitle(cls, kind)`.
   - `expireOffer(state, ctx, { offerId }): Certificate` — DMO-EC or DMO-ER
   - `expireDueOffers(state, ctx): Certificate[]` — all `open` offers whose `closesAt <= nowIso`
   - `recordPayment(state, ctx, { acceptanceId })`, `recordCollection(state, ctx, { acceptanceId })`
@@ -1417,11 +1423,11 @@ test("seed contains the scripted scenario", () => {
   assert.ok(open.some((o) => o.audience === "smelters"));
   assert.ok(open.some((o) => o.audience === "buyers"));
 
-  // one DMO-EC, one DMO-ER, three DMO-A already issued
+  // one DMO-EC, one DMO-ER, five DMO-A (three 1 t children + the two lots behind the refined lots)
   const by = (cls: string) => s.certificates.filter((c) => c.cls === cls).length;
   assert.equal(by("DMO-EC"), 1);
   assert.equal(by("DMO-ER"), 1);
-  assert.equal(by("DMO-A"), 3);
+  assert.equal(by("DMO-A"), 5);
 
   // three 1 t child lots collected and ready to aggregate
   const collected = s.lots.filter((l) => l.status === "collected");
@@ -1435,7 +1441,7 @@ Note: `@/lib/store` imports `node:fs`, fine under tsx. The `@/` alias must resol
 
 - [ ] **Step 3: Write `src/lib/dmo/seed.ts`**
 
-Build with workflow functions and a fixed-price ctx from the board. Set counters first so the registration numbers match the sample certificates: `state.counters["reg:SUP:2026"] = 455`, `["reg:SMEL:2026"] = 14`, `["reg:BUY:2026"] = 101`, `["cert:DMO-EC:concentrate:2026"] = 20`, `["cert:DMO-A:concentrate:2026"] = 28`, `["parent:2026"] = 40`.
+Build with workflow functions and a fixed-price ctx from the board. Set counters first so the registration numbers match the sample certificates: `state.counters["reg:SUP:2026"] = 455`, `["reg:SMEL:2026"] = 14`, `["reg:BUY:2026"] = 101`, `["cert:DMO-EC:concentrate:2026"] = 20`, `["cert:DMO-A:concentrate:2026"] = 26`, `["parent:2026"] = 40`. Because items 11 and 12 below are seeded before item 7 in time order but the ids are assigned in call order, run items in this call order: 1–5, 11, 12, 6, 7, 8, 9, 10 — so the DMO-A sequence is 00027, 00028 (refined-path lots), then 00029–00031 (child lots).
 
 Scenario, in this order (times relative to `nowIso`, using `addDays(now, -n)` helper for the past):
 
@@ -1449,8 +1455,8 @@ Scenario, in this order (times relative to `nowIso`, using `addDays(now, -n)` he
 8. Solex: 25 × 1,000 kg @ 78% → verified (−2 d) → **offer open** (closes +3 d). This is the lot United accepts live.
 9. Solex: 1,200 kg (12 × 100 kg @ 72%) → submitted (−1 d), `awaiting_sample`.
 10. Solex ledger: 19 purchases totalling 980 kg @ 72% (18 × 50 kg + 1 × 80 kg), dated −5…−1 d, `lotId null`.
-11. United: an earlier concentrate lot path to refined — seed a separate Solex 25 t lot (−30 d) accepted by United, paid, collected, parent lot → `registerRefinedLot` 24,987.5 → actually use `recoveredKg: 18_525` at 99.95% purity? No: DMO-ER sample is **25.000 MT** refined. Use a parent made from two seeded 13,160 kg @ 78% lots (contained 20,530 kg) and `recoveredKg: 25_000` would exceed contained. Instead seed the refined lot directly: after parent creation call `registerRefinedLot` with `recoveredKg: 19_500 × 0.95 = 18_525`; the DMO-ER will read 18.525 MT, not 25 MT. **Decision:** keep physics honest — DMO-ER in the seed is 18.525 MT @ 99.95%. Then `expireOffer` (natural, offer opened −7 d) → **DMO-ER `…-00001`**.
-12. United: second refined lot 5,000 kg @ 99.95% from another seeded parent → **offer open to buyers** (closes +4 d) for the live domestic-sale moment.
+11. United refined lot with no buyer: seed a separate Solex 25,000 kg @ 78% lot (−30 d) → accepted by United (−29 d, DMO-A) → paid → collected → parent lot (`…-0041`) → `registerRefinedLot` with `recoveredKg: 18_525`, `purityPct: 99.95` (95% of 19,500 kg contained; mass balance stays honest, so this DMO-ER reads 18.525 MT rather than the handout's 25 MT) → offer opened −7 d → natural `expireOffer` at −2 d → **DMO-ER `…-00001`**.
+12. United: second refined lot — seed another Solex 8,000 kg @ 75% lot (−25 d) → accepted (DMO-A) → paid → collected → parent lot → `registerRefinedLot` 5,700 kg @ 99.95% → **offer open to buyers** (closes +4 d) for the live domestic-sale moment. This makes five DMO-A in total; adjust the seed test to `by("DMO-A") === 5`. Counter for DMO-A starts at 26 so the three child-lot certificates are 00029–00031.
 
 Export `SEED_IDS`.
 
