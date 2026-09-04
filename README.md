@@ -22,8 +22,9 @@ A scripted, role-based demonstration of the Domestic Market Offer (DMO) operatin
 
 - `/exchange` — new landing page (kept separate from `/` so the two can be compared)
 - `/register` — role-based onboarding with category-specific document checklists
-- `/login` — one-click sign-in to the seeded demo accounts
-- `/portal/supplier`, `/portal/smelter`, `/portal/buyer`, `/portal/admin`, `/portal/verify` — dashboards per role
+- `/login` — one-click sign-in; cards grouped as market ports vs government / appointed agencies
+- `/portal/…` — ERP-style shell (collapsible sidebar on desktop, hamburger drawer on mobile). Each role lands on a card dashboard and drills into queues, lots and reports
+- `/portal/admin?tab=reports` — national contained-tin pipeline, royalty by holder, expandable lot and participant registers
 - `/certificates/<no>` — full certificate with QR (parties, officers and verifiers only); `/verify?no=` — public status check
 
 Design: `docs/superpowers/specs/2026-09-04-dmo-demo-platform-design.md`. Plan: `docs/superpowers/plans/2026-09-04-dmo-demo-platform.md`.
@@ -41,7 +42,9 @@ Prices are never fixed. Every offer shows indicative values from the live board;
 | Verifier | Neroli Inspection Services (PIA) | — |
 | Pending applicant | Wamba Tin Shed | awaiting review |
 
-**Suggested walkthrough** (≈15 minutes): `/exchange` → `/verify` with `NMEX-DMO-EC-TINC-2026-00021` → register a tin shed → officer approves it → Solex adds a 50 kg purchase, the MML button unlocks, submit → officer marks sample received and enters the assay → United accepts the 25 MT lot in the National Pool (DMO-A issues) → pay, collect, create a parent lot, register refined output → Lagos Solder buys refined tin → verifier marks `…-00021` utilized → officer advances the clock 120 h to expire the open offers → reset.
+**QR / reuse lock:** a scan of `/verify?no=` shows live status. An appointed NESS / Customs verifier signs in and marks the clearance **utilized**; that status is terminal and the same number cannot support a second shipment.
+
+**Suggested walkthrough** (≈15 minutes): `/exchange` → `/verify` with `NMEX-DMO-EC-TINC-2026-00021` (then sign in as Neroli to mark utilized) → officer dashboard cards and Traceability report → register a tin shed → officer approves it → Solex adds a 50 kg purchase, the MML button unlocks, submit → officer marks sample received and enters the assay → United accepts the 25 MT lot in the National Pool (DMO-A issues) → pay, collect, create a parent lot, register refined output → Lagos Solder buys refined tin → officer advances the clock 120 h → reset.
 
 Demo state lives in `data/demo.json` locally and `/var/lib/nm-ex/demo.json` in production (`NM_EX_DEMO_PATH` overrides). Delete it or use **Demo controls → Reset** to rebuild the seed. Run `npm test` for the valuation, state-machine and seed tests.
 
