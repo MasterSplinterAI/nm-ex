@@ -28,16 +28,15 @@ export function Countdown({
   label?: string;
   className?: string;
 }) {
-  const serverOffset = new Date(nowIso).getTime() - Date.now();
-  const [remaining, setRemaining] = useState(() => new Date(untilIso).getTime() - (Date.now() + serverOffset));
+  const initial = new Date(untilIso).getTime() - new Date(nowIso).getTime();
+  const [remaining, setRemaining] = useState(initial);
 
   useEffect(() => {
+    const serverOffset = new Date(nowIso).getTime() - Date.now();
     const tick = () => setRemaining(new Date(untilIso).getTime() - (Date.now() + serverOffset));
     tick();
     const id = window.setInterval(tick, 30_000);
     return () => window.clearInterval(id);
-    // serverOffset is derived from props that only change with a re-render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [untilIso, nowIso]);
 
   const closed = remaining <= 0;

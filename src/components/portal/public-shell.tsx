@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { NigeriaFlag } from "@/components/nigeria-flag";
 
@@ -18,16 +19,16 @@ export function PublicShell({
     <div className="flex min-h-dvh flex-col bg-[var(--paper)] text-[var(--ink)]">
       <header className="border-b border-[var(--line)] bg-white/70 pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-10">
-          <a href="/" className="font-display text-lg tracking-tight text-[var(--ink)]">
+          <Link href="/" className="font-display text-lg tracking-tight text-[var(--ink)]">
             NM-EX
-          </a>
+          </Link>
           <nav className="flex items-center gap-4 text-sm text-[var(--ink-muted)]">
             <a href="/exchange" className="hover:text-[var(--ink)]">
               Exchange
             </a>
-            <a href="/#spot" className="hidden hover:text-[var(--ink)] sm:inline">
+            <Link href="/#spot" className="hidden hover:text-[var(--ink)] sm:inline">
               Spot board
-            </a>
+            </Link>
             <a href="/verify" className="hover:text-[var(--ink)]">
               Verify
             </a>

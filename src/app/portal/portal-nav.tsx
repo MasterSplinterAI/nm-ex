@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LiveClock } from "@/components/live-clock";
 import { NigeriaFlag } from "@/components/nigeria-flag";
 import { ROLE_SHORT } from "@/lib/dmo/labels";
@@ -27,9 +28,9 @@ export function PortalNav({ participant, demoNowIso, clockOffsetMs }: { particip
           </div>
         </div>
         <nav className="flex items-center gap-3 text-sm text-[var(--ink-muted)] sm:gap-5">
-          <a href="/" className="hidden hover:text-[var(--ink)] sm:inline">
+          <Link href="/" className="hidden hover:text-[var(--ink)] sm:inline">
             Spot board
-          </a>
+          </Link>
           <a href="/verify" className="hover:text-[var(--ink)]">
             Verify
           </a>
