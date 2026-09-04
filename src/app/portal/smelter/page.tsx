@@ -51,15 +51,13 @@ export default async function SmelterPage({ searchParams }: { searchParams: Prom
         <PageHeader
           kicker="Qualified domestic smelter"
           title={
-            active === "pool"
-              ? "National Pool"
-              : active === "acceptances"
-                ? "Acceptances"
-                : active === "inventory"
-                  ? "Inventory & aggregation"
-                  : active === "refined"
-                    ? "Refined output"
-                    : "Certificates & royalty"
+            active === "acceptances"
+              ? "Acceptances"
+              : active === "inventory"
+                ? "Inventory & aggregation"
+                : active === "refined"
+                  ? "Refined output"
+                  : "Certificates & royalty"
           }
           lede={me.regNo ?? undefined}
         />
