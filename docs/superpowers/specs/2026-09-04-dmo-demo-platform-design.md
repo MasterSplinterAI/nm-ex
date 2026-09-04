@@ -89,20 +89,20 @@ Public
 - `/certificates/[certNo]` — printable certificate, styled after the sample
   images, with QR. Browser "Print → Save as PDF" is the PDF.
 
-Signed in (`/app/...`, layout switches by role)
+Signed in (`/portal/...`, layout switches by role)
 
-- `/app/supplier` — purchase ledger, running inventory by grade tier, MML
+- `/portal/supplier` — purchase ledger, running inventory by grade tier, MML
   trigger, inspection requests with 48-hour countdown, lots, offers,
   certificates.
-- `/app/smelter` — National Pool, Accept, accepted-lot pipeline
+- `/portal/smelter` — National Pool, Accept, accepted-lot pipeline
   (Accepted → Payment pending → Paid → Collection pending → Collected),
   parent-lot builder, register refined lot, offer refined lot, certificates.
-- `/app/buyer` — refined-tin pool, Accept, own acceptances.
-- `/app/admin` — registration queue, inspection queue (mark sample received,
+- `/portal/buyer` — refined-tin pool, Accept, own acceptances.
+- `/portal/admin` — registration queue, inspection queue (mark sample received,
   enter verified weight/grade, approve to pool), offers (close/expire),
   certificate register (cancel, suspend, mark utilized), policy, audit log,
   demo controls, demo script.
-- `/app/verify` — verifier console: number or QR → status and matching
+- `/portal/verify` — verifier console: number or QR → status and matching
   fields → Mark utilized.
 
 ## 6. Domain model
@@ -178,9 +178,26 @@ Rules the engine encodes:
 - Certificates freeze LME, FX, coefficient, royalty rate and computed values
   at issue time. Later policy changes do not alter issued certificates.
 
-Reference price mode (policy): `fixed` uses LME US$55,225/MT and FX
-₦1,322/US$ so the on-screen numbers match the printed handouts; `live`
-reads the spot board. Default for the demo is `fixed`.
+Price reference. Prices come from the live spot board (tin `lastUsd` and
+the USD/NGN rate), never from a fixed constant. The documents do not fix a
+pricing moment or mention hedging; the handbook lists "formal definition of
+the LME/reference price and timestamp used by NM-EX" and "the approved
+CBN/FX reference and timestamp" as open implementation controls (§17), and
+every certificate carries "LME Reference — price and reference
+timestamp/period" and "FX Reference — rate and timestamp/period"
+(Appendix A). The supplement locks the *assay* to the Lot ID before the
+offer opens (§3), not the price. The One-Pager's only timing rule is
+royalty paid on the 21st for the prior 30-day cycle on refined-ingot
+valuation, accrual basis.
+
+So the platform snapshots a `PriceRef { lmeUsd, fxRate, at }` from the
+board at each fiscal event — assay lock, acceptance, certificate issue — and
+records it on that event. Open offers show an indicative value that moves
+with the board and is labelled as indicative. Issued certificates never
+move. The handbook's worked numbers (LME 55,225 / FX 1,322) are used only
+in the unit tests, so on-screen values will differ from the printed
+handouts unless the board happens to match; the certificate states which
+LME/FX it used and when.
 
 ## 8. Policy (admin-editable, not hard-coded)
 
@@ -195,7 +212,6 @@ Brief §19 and the OMP note require these to be configurable:
 - MML by grade tier: Tier 1 (> 50% Sn) 1,000 kg; Tier 2 (≤ 50% Sn) 2,000 kg.
 - Sample window 48 h; offer period 5 calendar days; payment/collection
   window 5 days.
-- Reference price mode `fixed | live`, fixed LME, fixed FX.
 - Required registration documents per participant category (list of names).
 
 ## 9. Certificates and verification
@@ -274,7 +290,7 @@ Built as separate components; nothing in `src/components/hero.tsx` or
 
 Signed cookie (`HMAC`, same pattern as `desk-auth.ts`) carrying
 `participantId` and `role`. Server actions read the session and check role
-before mutating. Middleware redirects `/app/*` to `/login`. No password
+before mutating. The `/portal` layout redirects unauthenticated visitors to `/login`. No password
 reset, no e-mail.
 
 ## 13. Out of scope for the demo
@@ -296,7 +312,7 @@ Reset scenario.
 
 1. Domain types, valuation engine, tests (numbers match handouts).
 2. Demo store, seed scenario, audit log, reset.
-3. Auth, login cards, register flow, `/app` layout with role nav.
+3. Auth, login cards, register flow, `/portal` layout with role nav.
 4. Admin console: registrations, inspections, offers, certificates, policy,
    demo controls.
 5. Supplier dashboard: ledger, inventory, MML, inspection, lots.
@@ -319,5 +335,8 @@ deployable throughout.
   the samples.
 - United Smelters is located in **Jos** (per the certificates), not Lagos
   (per the existing desk mock).
-- Reference price mode defaults to **fixed** so screen matches paper.
+- Prices are always the **live board**, snapshotted per fiscal event
+  (Kenny, 2026-09-04). No fixed mode.
 - New landing lives at **`/exchange`**; `/` is untouched.
+- Signed-in area is **`/portal/…`** (not `/app/…`, to avoid
+  `src/app/app/` in the router tree).
