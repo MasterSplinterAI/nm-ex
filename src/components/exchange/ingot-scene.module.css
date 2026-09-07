@@ -1,107 +1,124 @@
 .scene {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  min-height: 22rem;
-  overflow: hidden;
-  perspective: 900px;
-}
-
-.grid {
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse at 50% 60%, black 30%, transparent 80%);
-  transform: rotateX(55deg) translateY(30%) scale(1.6);
-  transform-origin: 50% 100%;
-  animation: gridDrift 18s linear infinite;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  background: #0d1210;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.45);
 }
 
-@keyframes gridDrift {
+.photo {
+  object-fit: cover;
+  /* The stack sits mid-frame in the source; hold it there as the container
+     narrows rather than cropping the near face away. */
+  object-position: 48% 52%;
+  /* Slow push-in. The scene should feel alive without ever calling attention
+     to the motion itself, so the travel stays under a few percent. */
+  animation: drift 34s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+
+/* A single specular pass across the cast faces, as if a gantry light moved by. */
+.sheen {
+  position: absolute;
+  inset: -30% -60%;
+  background: linear-gradient(
+    104deg,
+    transparent 38%,
+    rgb(255 255 255 / 0.1) 47%,
+    rgb(255 255 255 / 0.22) 50%,
+    rgb(255 255 255 / 0.1) 53%,
+    transparent 62%
+  );
+  animation: sweep 11s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* Ties the photograph into the dark hero rather than sitting on top of it. */
+.veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgb(9 14 12 / 0.85) 0%, rgb(9 14 12 / 0.25) 38%, transparent 70%),
+    linear-gradient(0deg, rgb(9 14 12 / 0.9) 0%, transparent 45%),
+    radial-gradient(ellipse at 62% 45%, rgb(31 107 79 / 0.18), transparent 62%);
+  pointer-events: none;
+}
+
+.caption {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  background: rgb(9 14 12 / 0.6);
+  backdrop-filter: blur(6px);
+  padding: 0.35rem 0.7rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.78);
+}
+
+.pulse {
+  display: inline-block;
+  height: 0.4rem;
+  width: 0.4rem;
+  border-radius: 999px;
+  background: #9fd4bd;
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes drift {
   from {
-    background-position: 0 0, 0 0;
+    transform: scale(1.01) translate3d(0, 0, 0);
   }
   to {
-    background-position: 0 48px, 0 0;
+    transform: scale(1.06) translate3d(-1%, -0.6%, 0);
   }
 }
 
-.ingot {
-  position: absolute;
-  width: 46%;
-  max-width: 300px;
-  transform: scale(var(--scale, 1));
-  filter: drop-shadow(0 30px 30px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 40px var(--glow));
-  animation: float 12s ease-in-out infinite;
-  transform-style: preserve-3d;
+@keyframes sweep {
+  0% {
+    transform: translateX(-42%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 1;
+  }
+  70%,
+  100% {
+    transform: translateX(42%);
+    opacity: 0;
+  }
 }
 
-.ingotSvg {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-@keyframes float {
+@keyframes pulse {
   0%,
   100% {
-    transform: translate3d(0, 0, 0) rotateX(8deg) rotateZ(-6deg) scale(var(--scale, 1));
+    opacity: 1;
   }
-  33% {
-    transform: translate3d(0, -14px, 0) rotateX(12deg) rotateZ(-2deg) scale(var(--scale, 1));
+  50% {
+    opacity: 0.35;
   }
-  66% {
-    transform: translate3d(0, -6px, 0) rotateX(5deg) rotateZ(-9deg) scale(var(--scale, 1));
-  }
-}
-
-.grain {
-  position: absolute;
-  bottom: -4px;
-  border-radius: 9999px;
-  background: #d8b98f;
-  animation: rise linear infinite;
-}
-
-@keyframes rise {
-  0% {
-    transform: translateY(0) translateX(0);
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.6;
-  }
-  100% {
-    transform: translateY(-110vh) translateX(20px);
-    opacity: 0;
-  }
-}
-
-.heap {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 30%;
-}
-
-.heapLabel {
-  position: absolute;
-  right: 1rem;
-  bottom: 0.75rem;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .grid,
-  .ingot,
-  .grain {
+  .photo,
+  .sheen,
+  .pulse {
     animation: none;
+  }
+  .sheen {
+    opacity: 0;
   }
 }
