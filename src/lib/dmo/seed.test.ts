@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildSeed, SEED_IDS } from "./seed";
 import { seedBoard } from "../store";
+import { migrateState } from "./store";
 
 const NOW = "2026-09-04T08:00:00.000Z";
 
@@ -10,6 +11,10 @@ test("seed contains the scripted scenario", () => {
   const solex = s.participants.find((p) => p.id === SEED_IDS.solex)!;
   assert.equal(solex.legalName, "Musa & Son Ltd");
   assert.equal(solex.regNo, "NMEX-SUP-2026-00456");
+  const verifier = s.participants.find((p) => p.id === SEED_IDS.verifier)!;
+  assert.equal(verifier.legalName, "Neroli Inspection Services");
+  assert.equal(verifier.email, "pia@neroli.example");
+  assert.ok(s.audit.every((event) => !event.detail.includes("Nairobi Inspection Services")));
   assert.equal(s.participants.find((p) => p.id === SEED_IDS.united)!.regNo, "NMEX-SMEL-2026-00015");
   assert.equal(s.participants.find((p) => p.id === SEED_IDS.solder)!.regNo, "NMEX-BUY-2026-00102");
   assert.equal(s.participants.find((p) => p.id === SEED_IDS.wamba)!.status, "pending");
@@ -55,4 +60,20 @@ test("seed contains the scripted scenario", () => {
   assert.equal(s.campaigns.length, 2);
   assert.ok(s.audit.length > 100);
   for (let i = 1; i < s.audit.length; i++) assert.ok(s.audit[i - 1].at <= s.audit[i].at);
+});
+
+test("persistent verifier records migrate from Nairobi to Neroli without a reset", () => {
+  const state = buildSeed(seedBoard(), NOW);
+  const verifier = state.participants.find((p) => p.id === SEED_IDS.verifier)!;
+  verifier.legalName = "Nairobi Inspection Services";
+  verifier.email = "pia@nairobi.example";
+  state.audit[0].actorLabel = "Nairobi Inspection Services";
+  state.audit[0].detail = "Nairobi Inspection Services · pia@nairobi.example";
+
+  assert.equal(migrateState(state), true);
+  assert.equal(verifier.legalName, "Neroli Inspection Services");
+  assert.equal(verifier.email, "pia@neroli.example");
+  assert.equal(state.audit[0].actorLabel, "Neroli Inspection Services");
+  assert.equal(state.audit[0].detail, "Neroli Inspection Services · pia@neroli.example");
+  assert.equal(migrateState(state), false, "migration should be idempotent");
 });

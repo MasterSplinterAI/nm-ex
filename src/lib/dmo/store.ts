@@ -3,7 +3,7 @@ import path from "node:path";
 import { readSpotBoard } from "@/lib/store";
 import { demoNowIso } from "./clock";
 import { priceRefFromBoard } from "./prices";
-import { buildSeed } from "./seed";
+import { buildSeed, SEED_IDS } from "./seed";
 import type { DemoState } from "./types";
 import { expireDueOffers, type Ctx } from "./workflow";
 
@@ -26,13 +26,52 @@ async function seedFresh(): Promise<DemoState> {
   return seeded;
 }
 
+const OLD_VERIFIER_NAME = "Nairobi Inspection Services";
+const NEW_VERIFIER_NAME = "Neroli Inspection Services";
+const OLD_VERIFIER_EMAIL = "pia@nairobi.example";
+const NEW_VERIFIER_EMAIL = "pia@neroli.example";
+
+/** Keep persistent demo data aligned with corrections that must not require a reset. */
+export function migrateState(state: DemoState): boolean {
+  let changed = false;
+  const verifier = state.participants.find((participant) => participant.id === SEED_IDS.verifier);
+  if (verifier?.legalName === OLD_VERIFIER_NAME) {
+    verifier.legalName = NEW_VERIFIER_NAME;
+    changed = true;
+  }
+  if (verifier?.email === OLD_VERIFIER_EMAIL) {
+    verifier.email = NEW_VERIFIER_EMAIL;
+    changed = true;
+  }
+  for (const event of state.audit ?? []) {
+    const detail = event.detail
+      ?.replaceAll(OLD_VERIFIER_NAME, NEW_VERIFIER_NAME)
+      .replaceAll(OLD_VERIFIER_EMAIL, NEW_VERIFIER_EMAIL);
+    const actorLabel = event.actorLabel
+      ?.replaceAll(OLD_VERIFIER_NAME, NEW_VERIFIER_NAME)
+      .replaceAll(OLD_VERIFIER_EMAIL, NEW_VERIFIER_EMAIL);
+    if (detail !== event.detail) {
+      event.detail = detail;
+      changed = true;
+    }
+    if (actorLabel !== event.actorLabel) {
+      event.actorLabel = actorLabel;
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 async function load(): Promise<DemoState> {
+  let state: DemoState;
   try {
     const raw = await fs.readFile(/* turbopackIgnore: true */ PERSIST_PATH, "utf8");
-    return JSON.parse(raw) as DemoState;
+    state = JSON.parse(raw) as DemoState;
   } catch {
     return seedFresh();
   }
+  if (migrateState(state)) await write(state);
+  return state;
 }
 
 function serialize<T>(work: () => Promise<T>): Promise<T> {
@@ -41,7 +80,7 @@ function serialize<T>(work: () => Promise<T>): Promise<T> {
   return run;
 }
 
-/** Read-only view. Expired offers are settled lazily on the next mutation. */
+/** Read state; one-time data corrections may be persisted during loading. */
 export function readState(): Promise<DemoState> {
   return serialize(load);
 }
