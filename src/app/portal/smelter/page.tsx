@@ -17,8 +17,8 @@ import { PageHeader } from "../page-header";
 import { ListingDetail } from "@/components/portal/listing-detail";
 import { lotBundle } from "@/lib/dmo/lot-view";
 import { acceptOfferAction, collectAction, createParentLotAction, payAction, registerRefinedAction } from "./actions";
+import { PoolBoard } from "@/components/portal/pool-board";
 import { SmelterHome } from "./home";
-import { PoolBoard } from "./pool-board";
 import { SmelterRoyalty } from "./royalty";
 
 export const dynamic = "force-dynamic";
@@ -83,7 +83,34 @@ export default async function SmelterPage({ searchParams }: { searchParams: Prom
         );
       })()}
       {active === "pool" && !lotId && (
-        <PoolBoard pool={pool} policy={state.policy} lmeUsd={lme} fxRate={board.fx.rate} nowIso={nowIso} />
+        <PoolBoard
+          pool={pool}
+          policy={state.policy}
+          lmeUsd={lme}
+          fxRate={board.fx.rate}
+          nowIso={nowIso}
+          kind="concentrate"
+          title="National Pool — tin (Sn) concentrate"
+          lede="Verified lots from accredited tin sheds and mines. An assay is locked before a lot appears here."
+          lotHref={(id) => `/portal/smelter?tab=pool&lot=${encodeURIComponent(id)}`}
+          emptyText="The National Pool is empty. Lots appear when NM-EX locks an assay and opens the domestic window."
+          action={(entry) => {
+            const href = `/portal/smelter?tab=pool&lot=${encodeURIComponent(entry.lot.id)}`;
+            return (
+              <>
+                <a href={href} className="inline-flex h-7 items-center rounded-md bg-[#1b4d38] px-3 text-xs font-semibold text-white hover:bg-[#163d2c]">
+                  Bid
+                </a>
+                <a
+                  href={href}
+                  className="inline-flex h-7 items-center rounded-md border border-[var(--line-strong)] px-3 text-xs font-semibold text-[var(--ink)] hover:border-[#1b4d38] hover:text-[#1b4d38]"
+                >
+                  View
+                </a>
+              </>
+            );
+          }}
+        />
       )}
 
       {active === "royalty" && <SmelterRoyalty state={state} me={me} policy={state.policy} />}

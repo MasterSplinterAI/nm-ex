@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
 import { Empty } from "@/components/portal/empty";
+import { ListingDetail } from "@/components/portal/listing-detail";
 import { Money } from "@/components/portal/money";
 import { Panel } from "@/components/portal/panel";
-import { PoolCard } from "@/components/portal/pool-card";
+import { PoolBoard } from "@/components/portal/pool-board";
 import { CertStatusPill } from "@/components/portal/status-pill";
+import { lotBundle } from "@/lib/dmo/lot-view";
 import { formatDateTime, formatKg, formatPct } from "@/lib/format";
 import { demoNowIso } from "@/lib/dmo/clock";
 import { tabFromSearch } from "@/lib/dmo/nav";
@@ -17,10 +19,14 @@ import { BuyerHome } from "./home";
 
 export const dynamic = "force-dynamic";
 
-export default async function BuyerPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+export default async function BuyerPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string; lot?: string }>;
+}) {
   const session = await getSession();
   if (!session || session.role !== "buyer") redirect("/portal");
-  const { tab } = await searchParams;
+  const { tab, lot: lotId } = await searchParams;
   const raw = tabFromSearch(tab);
   const active = raw === "purchases" || raw === "pool" ? raw : "home";
 
@@ -34,24 +40,56 @@ export default async function BuyerPage({ searchParams }: { searchParams: Promis
   return (
     <>
       {active === "home" && <BuyerHome state={state} me={me} nowIso={nowIso} />}
-      {active !== "home" && (
-        <PageHeader
-          kicker="Domestic end user"
-          title={active === "pool" ? "Refined tin offered" : "My purchases"}
-          lede={me.regNo ?? undefined}
-        />
+      {active !== "home" && active !== "pool" && (
+        <PageHeader kicker="Domestic end user" title="My purchases" lede={me.regNo ?? undefined} />
       )}
 
-      {active === "pool" && (
-        <div className="space-y-4">
-          {pool.length === 0 ? (
-            <Empty>No refined tin is offered right now. Lots appear here when a smelter registers a campaign.</Empty>
-          ) : (
-            pool.map((entry) => (
-              <PoolCard key={entry.offer.id} entry={entry} policy={state.policy} lmeUsd={lme} fxRate={board.fx.rate} nowIso={nowIso} acceptAction={acceptOfferAction} verb="Buy" />
-            ))
-          )}
-        </div>
+      {active === "pool" && lotId && (() => {
+        const bundle = lotBundle(state, lotId);
+        return bundle && bundle.offer ? (
+          <ListingDetail
+            bundle={bundle}
+            policy={state.policy}
+            lmeUsd={lme}
+            fxRate={board.fx.rate}
+            audience="buyer"
+            backHref="/portal/buyer?tab=pool"
+            acceptAction={acceptOfferAction}
+          />
+        ) : (
+          <p className="text-sm text-[var(--ink-muted)]">That lot is not offered to domestic buyers.</p>
+        );
+      })()}
+
+      {active === "pool" && !lotId && (
+        <PoolBoard
+          pool={pool}
+          policy={state.policy}
+          lmeUsd={lme}
+          fxRate={board.fx.rate}
+          nowIso={nowIso}
+          kind="refined"
+          title="Refined tin offered domestically"
+          lede={`Nigerian-refined tin, offered at home for ${state.policy.offerPeriodDays} days before any of it may be exported.`}
+          lotHref={(id) => `/portal/buyer?tab=pool&lot=${encodeURIComponent(id)}`}
+          emptyText="No refined tin is offered right now. Lots appear here when a smelter registers a campaign."
+          action={(entry) => {
+            const href = `/portal/buyer?tab=pool&lot=${encodeURIComponent(entry.lot.id)}`;
+            return (
+              <>
+                <a href={href} className="inline-flex h-7 items-center rounded-md bg-[#1b4d38] px-3 text-xs font-semibold text-white hover:bg-[#163d2c]">
+                  Buy
+                </a>
+                <a
+                  href={href}
+                  className="inline-flex h-7 items-center rounded-md border border-[var(--line-strong)] px-3 text-xs font-semibold text-[var(--ink)] hover:border-[#1b4d38] hover:text-[#1b4d38]"
+                >
+                  View
+                </a>
+              </>
+            );
+          }}
+        />
       )}
 
       {active === "purchases" && (

@@ -97,15 +97,24 @@ export function lotFormulas(e: LotEconomics, policy: DemoState["policy"]): {
   };
 }
 
-/** The same three rules stated generally, for a board showing many lots. */
+/**
+ * The same three rules stated generally, for a board showing many lots. Refined
+ * metal carries no smelter coefficient — it is sold at the full reference.
+ */
 export function poolFormulas(
   policy: DemoState["policy"],
   lmeUsd: number,
   fxRate: number,
+  kind: Lot["kind"] = "concentrate",
 ): { label: string; expression: string }[] {
-  const metal = `${formatUsd(lmeUsd)} × grade × (weight ÷ 1,000) × ₦${fxRate.toLocaleString("en-NG")}`;
+  const coef = kind === "concentrate" ? policy.coefToSmelter : 1;
+  const assay = kind === "concentrate" ? "grade" : "purity";
+  const metal = `${formatUsd(lmeUsd)} × ${assay} × (weight ÷ 1,000) × ₦${fxRate.toLocaleString("en-NG")}`;
   return [
-    { label: "Listing price", expression: `${pct(policy.coefToSmelter * 100, 1)} × ${metal}` },
+    {
+      label: "Listing price",
+      expression: coef === 1 ? metal : `${pct(coef * 100, 1)} × ${metal}`,
+    },
     { label: `Royalty (${policy.royaltyPct}%)`, expression: `${policy.royaltyPct}% × ${metal}` },
     { label: `VAT (${policy.vatPct}%)`, expression: `${policy.vatPct}% of the listing price` },
   ];

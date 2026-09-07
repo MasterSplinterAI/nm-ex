@@ -28,7 +28,8 @@ export function ListingDetail({
   policy: DmoPolicy;
   lmeUsd: number;
   fxRate: number;
-  audience: "owner" | "smelter";
+  /** "owner" sees the sale side; a smelter or domestic buyer sees the buy side. */
+  audience: "owner" | "smelter" | "buyer";
   backHref: string;
   acceptAction?: (prev: ActionResult, fd: FormData) => Promise<ActionResult>;
 }) {
@@ -245,7 +246,7 @@ export function ListingDetail({
             {audience === "owner" && (
               <DocRow label="Assay & inspection results" href={`/portal/supplier?tab=lots&lot=${encodeURIComponent(lot.id)}`} pending="" />
             )}
-            {audience === "smelter" && <DocRow label="Back to National Pool" href="/portal/smelter?tab=pool" pending="" />}
+            {audience !== "owner" && <DocRow label="Back to the National Pool" href={backHref} pending="" />}
             {audience === "owner" && <DocRow label="All your listings" href="/portal/supplier?tab=listing" pending="" />}
           </ul>
         </Card>
