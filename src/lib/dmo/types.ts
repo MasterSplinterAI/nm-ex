@@ -37,7 +37,14 @@ export type PurchaseEntry = {
   id: string;
   supplierId: string;
   date: string;
+  /** Display name of who it came from, registered or not. */
   source: string;
+  /**
+   * Set when the seller is a registered participant, so the parcel also shows
+   * up in their account. Null for alluvial or unregistered sellers, who are
+   * recorded by name only.
+   */
+  sourceParticipantId?: string | null;
   kg: number;
   gradePct: number;
   valueNgn: number;
@@ -152,6 +159,14 @@ export type StatusChange = {
   note: string | null;
 };
 
+/** Settlement of the royalty assessed on a certificate, recorded by an officer. */
+export type RoyaltySettlement = {
+  at: string;
+  byId: string;
+  amountNgn: number;
+  reference: string;
+};
+
 export type Certificate = {
   certNo: string;
   cls: CertificateClass;
@@ -166,6 +181,8 @@ export type Certificate = {
   valuation: Valuation;
   supersedes: string | null;
   history: StatusChange[];
+  /** Null until the officer records receipt of the royalty. */
+  royaltySettlement?: RoyaltySettlement | null;
 };
 
 export type Valuation = {

@@ -24,17 +24,17 @@ export function ReportsTab({ state }: { state: DemoState }) {
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="border border-[var(--line)] bg-white/80 p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">Still in Nigeria</p>
+          <p className="eyebrow">Still in Nigeria</p>
           <p className="font-display mt-1 text-3xl tabular-nums">{formatMt(mass.inSystem * 1000)}</p>
           <p className="text-xs text-[var(--ink-muted)]">Contained tin across ledgers, pool, plant and unused clearances.</p>
         </div>
         <div className="border border-[var(--line)] bg-white/80 p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">Exported (utilized)</p>
+          <p className="eyebrow">Exported (utilized)</p>
           <p className="font-display mt-1 text-3xl tabular-nums">{formatMt(mass.exported * 1000)}</p>
           <p className="text-xs text-[var(--ink-muted)]">Certificates marked utilized by NESS / Customs. Cannot be re-used.</p>
         </div>
         <div className="border border-[var(--line)] bg-white/80 p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">Sold to domestic industry</p>
+          <p className="eyebrow">Sold to domestic industry</p>
           <p className="font-display mt-1 text-3xl tabular-nums">{formatMt(mass.domestic * 1000)}</p>
           <p className="text-xs text-[var(--ink-muted)]">Refined metal accepted by a Nigerian end user.</p>
         </div>
@@ -51,7 +51,7 @@ export function ReportsTab({ state }: { state: DemoState }) {
           certificates are excluded.
         </p>
         <table className="mt-4 w-full text-sm">
-          <thead className="text-left text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+          <thead className="table-head">
             <tr>
               <th className="pb-2 font-semibold">Holder</th>
               <th className="pb-2 font-semibold">Kind</th>
@@ -63,7 +63,14 @@ export function ReportsTab({ state }: { state: DemoState }) {
           <tbody className="divide-y divide-[var(--line)]">
             {royalty.map((r) => (
               <tr key={r.holderId}>
-                <td className="py-2">{r.holder}</td>
+                <td className="py-2">
+                  <a
+                    href={`/portal/admin?tab=registrations&entity=${encodeURIComponent(r.holderId)}`}
+                    className="font-semibold text-[#1f4b6b] hover:underline"
+                  >
+                    {r.holder}
+                  </a>
+                </td>
                 <td className="py-2 text-[var(--ink-muted)]">{r.kind === "smelter" ? "Held at smelter" : "Due from exporter"}</td>
                 <td className="py-2 text-right tabular-nums">{r.certs}</td>
                 <td className="py-2 text-right tabular-nums">{formatNgn(r.royaltyNgn)}</td>
@@ -102,7 +109,7 @@ export function ReportsTab({ state }: { state: DemoState }) {
         <summary className="cursor-pointer font-display text-xl text-[var(--ink)]">Lots on the register — {state.lots.length}</summary>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="text-left text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+            <thead className="table-head">
               <tr>
                 <th className="pb-2 font-semibold">Lot</th>
                 <th className="pb-2 font-semibold">Kind</th>
@@ -121,9 +128,20 @@ export function ReportsTab({ state }: { state: DemoState }) {
                   const grade = l.verifiedGradePct ?? l.declaredGradePct;
                   return (
                     <tr key={l.id}>
-                      <td className="py-2 tabular-nums">{l.id}</td>
+                      <td className="py-2 tabular-nums"><a href={`/portal/admin?lot=${encodeURIComponent(l.id)}`} className="font-semibold text-[#1f4b6b] hover:underline">{l.id}</a></td>
                       <td className="py-2 text-[var(--ink-muted)]">{l.kind}</td>
-                      <td className="py-2">{owner?.legalName ?? "—"}</td>
+                      <td className="py-2">
+                        {owner ? (
+                          <a
+                            href={`/portal/admin?tab=registrations&entity=${encodeURIComponent(owner.id)}`}
+                            className="font-semibold text-[#1f4b6b] hover:underline"
+                          >
+                            {owner.legalName}
+                          </a>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
                       <td className="py-2 text-right tabular-nums">{formatKg(kg)}</td>
                       <td className="py-2 text-right tabular-nums">{formatKg(kg * (grade / 100))}</td>
                       <td className="py-2 text-right text-xs uppercase tracking-wide text-[var(--ink-muted)]">{l.status.replaceAll("_", " ")}</td>
@@ -138,7 +156,7 @@ export function ReportsTab({ state }: { state: DemoState }) {
       <details className="border border-[var(--line)] bg-white/80 p-5">
         <summary className="cursor-pointer font-display text-xl text-[var(--ink)]">Registered participants — {participants.length}</summary>
         <table className="mt-4 w-full text-sm">
-          <thead className="text-left text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+          <thead className="table-head">
             <tr>
               <th className="pb-2 font-semibold">Registration</th>
               <th className="pb-2 font-semibold">Name</th>
@@ -150,7 +168,14 @@ export function ReportsTab({ state }: { state: DemoState }) {
             {participants.map((p) => (
               <tr key={p.id}>
                 <td className="py-2 tabular-nums">{p.regNo ?? "—"}</td>
-                <td className="py-2">{p.legalName}</td>
+                <td className="py-2">
+                  <a
+                    href={`/portal/admin?tab=registrations&entity=${encodeURIComponent(p.id)}`}
+                    className="font-semibold text-[#1f4b6b] hover:underline"
+                  >
+                    {p.legalName}
+                  </a>
+                </td>
                 <td className="py-2 text-[var(--ink-muted)]">{p.category ? CATEGORY_LABEL[p.category] : ROLE_LABEL[p.role]}</td>
                 <td className="py-2 text-right uppercase tracking-wide text-xs">{p.status.replaceAll("_", " ")}</td>
               </tr>

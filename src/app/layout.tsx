@@ -1,13 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Outfit, Syne } from "next/font/google";
+import { Inter, Inter_Tight, Syne } from "next/font/google";
 import "./globals.css";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
 });
 
+const interTight = Inter_Tight({
+  variable: "--font-inter-tight",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  display: "swap",
+});
+
+/** Kept for the NM-EX wordmark only — see `.font-brand`. */
 const syne = Syne({
   variable: "--font-syne",
   subsets: ["latin"],
@@ -40,7 +48,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${outfit.variable} ${syne.variable} h-full`}>
+    <html lang="en" className={`${inter.variable} ${interTight.variable} ${syne.variable} h-full`}>
       <body className="min-h-full antialiased">{children}</body>
     </html>
   );

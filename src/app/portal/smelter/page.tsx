@@ -19,10 +19,11 @@ import { lotBundle } from "@/lib/dmo/lot-view";
 import { acceptOfferAction, collectAction, createParentLotAction, payAction, registerRefinedAction } from "./actions";
 import { SmelterHome } from "./home";
 import { PoolBoard } from "./pool-board";
+import { SmelterRoyalty } from "./royalty";
 
 export const dynamic = "force-dynamic";
 
-const TABS = ["home", "pool", "acceptances", "inventory", "refined", "certificates"] as const;
+const TABS = ["home", "pool", "acceptances", "inventory", "refined", "royalty", "certificates"] as const;
 type TabId = (typeof TABS)[number];
 
 export default async function SmelterPage({ searchParams }: { searchParams: Promise<{ tab?: string; lot?: string }> }) {
@@ -57,7 +58,9 @@ export default async function SmelterPage({ searchParams }: { searchParams: Prom
                 ? "Inventory & aggregation"
                 : active === "refined"
                   ? "Refined output"
-                  : "Certificates & royalty"
+                  : active === "royalty"
+                    ? "Royalty position"
+                    : "Certificates"
           }
           lede={me.regNo ?? undefined}
         />
@@ -83,6 +86,8 @@ export default async function SmelterPage({ searchParams }: { searchParams: Prom
         <PoolBoard pool={pool} policy={state.policy} lmeUsd={lme} fxRate={board.fx.rate} nowIso={nowIso} />
       )}
 
+      {active === "royalty" && <SmelterRoyalty state={state} me={me} policy={state.policy} />}
+
       {active === "acceptances" && (
         <div className="space-y-4">
           {acceptances.length === 0 ? (
@@ -103,7 +108,7 @@ export default async function SmelterPage({ searchParams }: { searchParams: Prom
                     </p>
                     <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
                       <div>
-                        <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">Total payable (incl. VAT)</p>
+                        <p className="eyebrow">Total payable (incl. VAT)</p>
                         <Money ngn={a.valuation.totalPayableNgn} size="sm" />
                       </div>
                       <StatusPill tone={a.paymentStatus === "paid" ? "ok" : "warn"}>{a.paymentStatus === "paid" ? `Paid ${formatDate(a.paidAt!)}` : "Payment pending"}</StatusPill>
@@ -140,7 +145,7 @@ export default async function SmelterPage({ searchParams }: { searchParams: Prom
             ) : (
               <ActionForm action={createParentLotAction} inline={false}>
                 <table className="w-full text-sm">
-                  <thead className="text-left text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+                  <thead className="table-head">
                     <tr>
                       <th className="pb-2" />
                       <th className="pb-2 font-semibold">Child lot</th>
@@ -272,7 +277,7 @@ export default async function SmelterPage({ searchParams }: { searchParams: Prom
         <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
           <Panel kicker="Named on" title="DMO certificates">
             <table className="w-full text-sm">
-              <thead className="text-left text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+              <thead className="table-head">
                 <tr>
                   <th className="pb-2 font-semibold">Certificate</th>
                   <th className="pb-2 font-semibold">Lot</th>

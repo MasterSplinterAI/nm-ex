@@ -57,7 +57,7 @@ export function OffersTab({ state, board, nowIso }: { state: DemoState; board: S
 
       <Panel kicker="History" title="Recently closed offers">
         <table className="w-full text-sm">
-          <thead className="text-left text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+          <thead className="table-head">
             <tr>
               <th className="pb-2 font-semibold">Lot</th>
               <th className="pb-2 font-semibold">Audience</th>
@@ -69,7 +69,7 @@ export function OffersTab({ state, board, nowIso }: { state: DemoState; board: S
           <tbody className="divide-y divide-[var(--line)]">
             {closed.map((o) => (
               <tr key={o.id}>
-                <td className="py-2 tabular-nums">{o.lotId}</td>
+                <td className="py-2 tabular-nums"><a href={`/portal/admin?lot=${encodeURIComponent(o.lotId)}`} className="font-semibold text-[#1f4b6b] hover:underline">{o.lotId}</a></td>
                 <td className="py-2 text-[var(--ink-muted)]">{o.audience}</td>
                 <td className="py-2">{o.status === "accepted" ? "Accepted domestically" : o.status === "expired" ? "No domestic acceptance" : o.status}</td>
                 <td className="py-2 tabular-nums">{o.certNo ? <a href={`/certificates/${o.certNo}`} className="underline-offset-4 hover:underline">{o.certNo}</a> : "—"}</td>
@@ -102,24 +102,24 @@ function OfferRow({
   return (
     <article className="grid gap-4 border border-[var(--line)] bg-white/70 p-5 lg:grid-cols-[1fr_auto]">
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">
+        <p className="eyebrow">
           {commodityLabel(lot.kind)} · offered to qualified {offer.audience === "smelters" ? "smelters" : "domestic buyers"}
         </p>
-        <h3 className="font-display mt-1 text-xl tabular-nums">{lot.id}</h3>
+        <h3 className="font-display mt-1 text-xl tabular-nums"><a href={`/portal/admin?lot=${encodeURIComponent(lot.id)}`} className="hover:underline">{lot.id}</a></h3>
         <p className="text-sm text-[var(--ink-muted)]">
           {supplier.legalName} · {formatKg(lot.verifiedKg)} verified {formatPct(lot.verifiedGradePct!, 2)} Sn · opened {formatDateTime(offer.opensAt)}
         </p>
         <div className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">Indicative reference (live)</p>
+            <p className="eyebrow">Indicative reference (live)</p>
             <Money ngn={ref} size="sm" />
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">Indicative purchase × {coef}</p>
+            <p className="eyebrow">Indicative purchase × {coef}</p>
             <Money ngn={ref * coef} size="sm" />
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">Royalty if exported ({state.policy.royaltyPct}%)</p>
+            <p className="eyebrow">Royalty if exported ({state.policy.royaltyPct}%)</p>
             <Money ngn={ref * (state.policy.royaltyPct / 100)} size="sm" tone="red" />
           </div>
         </div>

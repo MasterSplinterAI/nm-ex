@@ -17,9 +17,19 @@ test("seed contains the scripted scenario", () => {
   const free = s.purchases.filter((p) => p.supplierId === SEED_IDS.solex && p.lotId === null);
   assert.equal(free.reduce((a, p) => a + p.kg, 0), 980);
 
+  const mine = s.participants.find((p) => p.id === SEED_IDS.ropp)!;
+  assert.equal(mine.category, "mining_company");
+  assert.equal(mine.status, "approved");
+  const mineLots = s.lots.filter((l) => l.ownerId === SEED_IDS.ropp);
+  assert.equal(mineLots.length, 1);
+  assert.equal(mineLots[0].verifiedKg, 11_960);
+  const mineFree = s.purchases.filter((p) => p.supplierId === SEED_IDS.ropp && p.lotId === null);
+  assert.equal(mineFree.reduce((a, p) => a + p.kg, 0), 2_700);
+
   assert.ok(s.inspections.some((i) => i.status === "awaiting_sample"));
   const open = s.offers.filter((o) => o.status === "open");
-  assert.equal(open.filter((o) => o.audience === "smelters").length, 1);
+  // One from the tin shed, one from the mine selling direct.
+  assert.equal(open.filter((o) => o.audience === "smelters").length, 2);
   assert.equal(open.filter((o) => o.audience === "buyers").length, 1);
   for (const o of open) assert.ok(o.closesAt > NOW, `open offer ${o.id} closes in the future`);
 

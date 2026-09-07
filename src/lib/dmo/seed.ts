@@ -24,6 +24,8 @@ export const SEED_IDS = {
   verifier: "part-verifier",
   solex: "part-solex", // Musa & Son Ltd — id kept so seeded lots stay attached
   musa: "part-solex",
+  ropp: "part-ropp",
+  bako: "part-bako",
   united: "part-united",
   solder: "part-solder",
   wamba: "part-wamba",
@@ -82,6 +84,39 @@ const PARTICIPANTS: SeedParticipant[] = [
       { name: "MBC-Licence-2026.pdf", type: "application/pdf" },
       { name: "Tax-Clearance-2025.pdf", type: "application/pdf" },
       { name: "CAC-Certificate.pdf", type: "application/pdf" },
+    ],
+    approve: true,
+  },
+  {
+    id: SEED_IDS.ropp,
+    role: "supplier",
+    category: "mining_company",
+    legalName: "Ropp Valley Mines Ltd",
+    address: "Ropp District, Barkin Ladi, Plateau State, Nigeria",
+    contactName: "Engr. Grace Bitrus",
+    phone: "+234 805 220 4417",
+    email: "operations@roppvalleymines.ng",
+    documents: [
+      { name: "Mining-Lease-ML-14882.pdf", type: "application/pdf" },
+      { name: "Minimum-Work-Programme-2026.pdf", type: "application/pdf" },
+      { name: "EIA-Environmental-Audit.pdf", type: "application/pdf" },
+      { name: "Tax-Clearance-2025.pdf", type: "application/pdf" },
+    ],
+    approve: true,
+  },
+  {
+    id: SEED_IDS.bako,
+    role: "supplier",
+    category: "mining_company",
+    legalName: "Bako Mining Co-operative",
+    address: "Bako Village, Riyom, Plateau State, Nigeria",
+    contactName: "Mr. Danjuma Bako",
+    phone: "+234 807 336 5512",
+    email: "bakomining@gmail.com",
+    documents: [
+      { name: "Small-Scale-Mining-Lease-SSML-2291.pdf", type: "application/pdf" },
+      { name: "Co-operative-Registration.pdf", type: "application/pdf" },
+      { name: "Tax-Clearance-2025.pdf", type: "application/pdf" },
     ],
     approve: true,
   },
@@ -186,10 +221,14 @@ export function buildSeed(board: SpotBoard, nowIso: string): DemoState {
   function seedLot(kg: number, gradePct: number, parcels: number, daysAgo: number) {
     const parcelKg = kg / parcels;
     for (let i = 0; i < parcels; i++) {
+      // Every third parcel comes from a registered co-op, so a trace shows both
+      // an account-linked seller and unregistered alluvial workings.
+      const registered = i % 3 === 0;
       addPurchase(s, ctx(solex, at(daysAgo + 2, i)), {
         supplierId: solex,
         date: dateOnly(at(daysAgo + 2)),
-        source: i % 3 === 0 ? "Artisanal cooperative, Rayfield" : i % 3 === 1 ? "Barkin Ladi diggings" : "Bukuru washing site",
+        source: registered ? "" : i % 3 === 1 ? "Barkin Ladi diggings" : "Bukuru washing site",
+        sourceParticipantId: registered ? SEED_IDS.bako : null,
         kg: parcelKg,
         gradePct,
         valueNgn: Math.round(parcelKg * 43_500),
@@ -273,14 +312,52 @@ export function buildSeed(board: SpotBoard, nowIso: string): DemoState {
   const sources = ["Rayfield cooperative", "Barkin Ladi diggings", "Bukuru washing site", "Kuru artisanal miners"];
   for (let i = 0; i < 19; i++) {
     const daysAgo = 5 - Math.floor(i / 4);
+    const registered = i % 4 === 0;
     addPurchase(s, ctx(solex, at(daysAgo, 9 + (i % 4))), {
       supplierId: solex,
       date: dateOnly(at(daysAgo)),
-      source: sources[i % sources.length],
+      source: registered ? "" : sources[i % sources.length],
+      sourceParticipantId: registered ? SEED_IDS.bako : null,
       kg: i === 18 ? 80 : 50,
       gradePct: 72,
       valueNgn: (i === 18 ? 80 : 50) * 43_500,
       reference: `RCPT-L${String(i + 1).padStart(2, "0")}`,
+    });
+  }
+
+  // 13. A registered mine selling direct. No shed in the middle, so it takes the
+  // full smelter coefficient itself instead of the 70% floor a shed would pay.
+  const ropp = SEED_IDS.ropp;
+  const pits = ["Ropp North pit", "Ropp North pit", "Sabon Gida pit", "Sabon Gida pit", "Kuru Jenta pit", "Kuru Jenta pit"];
+  for (let i = 0; i < pits.length; i++) {
+    addPurchase(s, ctx(ropp, at(9, i)), {
+      supplierId: ropp,
+      date: dateOnly(at(9)),
+      source: pits[i],
+      kg: 2_000,
+      gradePct: 74,
+      valueNgn: 2_000 * 30_000,
+      reference: `PROD-2026-${String(i + 1).padStart(3, "0")}`,
+    });
+  }
+  const mineLot = submitForInspection(s, ctx(ropp, at(8)), { supplierId: ropp, tier: 1, kg: 12_000 });
+  markSampleReceived(s, ctx(SEED_IDS.officer, at(7, 4)), { inspectionId: mineLot.inspection.id });
+  verifyLot(s, ctx(SEED_IDS.officer, at(3, 2)), {
+    inspectionId: mineLot.inspection.id,
+    verifiedKg: 11_960,
+    verifiedGradePct: 73.8,
+  });
+
+  // Production still on the mine's books, so its ledger is not empty on arrival.
+  for (let i = 0; i < 3; i++) {
+    addPurchase(s, ctx(ropp, at(2, i)), {
+      supplierId: ropp,
+      date: dateOnly(at(2)),
+      source: pits[i * 2],
+      kg: 900,
+      gradePct: 74,
+      valueNgn: 900 * 30_000,
+      reference: `PROD-2026-${String(i + 7).padStart(3, "0")}`,
     });
   }
 

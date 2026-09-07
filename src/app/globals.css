@@ -3,10 +3,15 @@
 :root {
   --paper: #eef2ef;
   --ink: #14201c;
-  --ink-muted: #4d5b55;
+  --ink-muted: #46544e;
+  --ink-soft: #66736d;
   --forest: #1f6b4f;
   --copper: #8f6a45;
   --line: #cfd7d2;
+  /* Card and table outlines. Deliberately darker than --line so a card reads
+     as an object on the paper background instead of floating on it. */
+  --line-strong: #b6c3bc;
+  --rule: #e6ebe8;
   --tin-panel: #dde5e0;
   --background: var(--paper);
   --foreground: var(--ink);
@@ -15,8 +20,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-outfit);
-  --font-display: var(--font-syne);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-inter-tight);
 }
 
 * {
@@ -31,22 +36,187 @@ html {
 body {
   background: var(--paper);
   color: var(--ink);
-  font-family: var(--font-outfit), ui-sans-serif, sans-serif;
+  font-family: var(--font-inter), ui-sans-serif, sans-serif;
   overflow-x: clip;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
 
 .font-display {
+  font-family: var(--font-inter-tight), ui-sans-serif, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.font-brand {
   font-family: var(--font-syne), ui-sans-serif, sans-serif;
   font-weight: 700;
 }
 
+/* Numbers line up column to column across every table and figure. */
+.tabular-nums,
+table {
+  font-variant-numeric: tabular-nums;
+}
+
 .portal-card {
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 1px 2px rgb(20 32 28 / 0.04), 0 8px 24px rgb(20 32 28 / 0.05);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgb(20 32 28 / 0.06);
+}
+
+/* Titled strip at the top of a card, as on the lot and pool screens. */
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  background: #f4f7f5;
+  border-bottom: 1px solid var(--line-strong);
+  border-radius: 11px 11px 0 0;
+}
+
+.card-title {
+  font-family: var(--font-inter-tight), ui-sans-serif, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+/* Label / value pair with a hairline between rows. */
+.data-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4375rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.data-row:last-child {
+  border-bottom: 0;
+}
+
+.data-label {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--ink-muted);
+}
+
+.data-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: right;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Small caps label. 11px and heavier than the old 10px so it stops
+   disappearing next to the value it describes. */
+.eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-muted);
+}
+
+/* Table header band. Shared so every portal table reads the same way. */
+.table-head {
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+  background: #f4f7f5;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.table-head th {
+  font-weight: 700;
+}
+
+/* Column gutters, applied once so no cell has to carry its own padding. */
+.data-table th,
+.data-table td {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.data-table th:first-child,
+.data-table td:first-child {
+  padding-left: 1rem;
+}
+
+.data-table th:last-child,
+.data-table td:last-child {
+  padding-right: 1rem;
+}
+
+/* Tinted callout band. Blue states a rule, amber flags a liability, green confirms. */
+.note {
+  border-radius: 8px;
+  border-left: 3px solid;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.note-info {
+  border-color: #1f4b6b;
+  background: rgb(31 75 107 / 0.07);
+  color: var(--ink-muted);
+}
+
+.note-warn {
+  border-color: var(--copper);
+  background: rgb(143 106 69 / 0.09);
+  color: var(--ink-muted);
+}
+
+.note-ok {
+  border-color: #1b4d38;
+  background: rgb(27 77 56 / 0.08);
+  color: var(--ink-muted);
+}
+
+.lock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.lock-badge--on {
+  background: rgb(27 77 56 / 0.1);
+  color: #1b4d38;
+}
+
+.lock-badge--off {
+  background: rgb(143 106 69 / 0.12);
+  color: var(--copper);
+}
+
+/* The spelled-out arithmetic under a money figure. */
+.formula {
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.formula b {
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .hero-veil {

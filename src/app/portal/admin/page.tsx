@@ -9,23 +9,31 @@ import { PageHeader } from "../page-header";
 import { AuditTab } from "./tabs/audit";
 import { CertificatesTab } from "./tabs/certificates";
 import { DemoTab } from "./tabs/demo";
+import { EntityDossier } from "./tabs/entity";
 import { AdminHome } from "./tabs/home";
 import { InspectionsTab } from "./tabs/inspections";
+import { LotDossier } from "./tabs/lot";
 import { OffersTab } from "./tabs/offers";
 import { PolicyTab } from "./tabs/policy";
+import { ProvenanceView } from "./tabs/provenance";
 import { RegistrationsTab } from "./tabs/registrations";
 import { ReportsTab } from "./tabs/reports";
+import { RoyaltyTab } from "./tabs/royalty";
 import { SettlementsTab } from "./tabs/settlements";
 
 export const dynamic = "force-dynamic";
 
-const TABS = ["home", "registrations", "inspections", "offers", "settlements", "certificates", "reports", "audit", "policy", "demo"] as const;
+const TABS = ["home", "registrations", "inspections", "offers", "settlements", "certificates", "royalty", "reports", "audit", "policy", "demo"] as const;
 type TabId = (typeof TABS)[number];
 
-export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string; entity?: string; lot?: string; trace?: string }>;
+}) {
   const session = await getSession();
   if (!session || session.role !== "officer") redirect("/portal");
-  const { tab } = await searchParams;
+  const { tab, entity, lot, trace } = await searchParams;
   const active = tabFromSearch(tab);
   const current: TabId = TABS.includes(active as TabId) ? (active as TabId) : "home";
 
@@ -33,12 +41,22 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const nowIso = demoNowIso(state);
   const me = participantById(state, session.participantId)!;
 
+  // A trace or a lot reference is meaningful from any tab, so it wins over the
+  // tab content rather than forcing the officer back through the menu.
+  if (trace) return <ProvenanceView state={state} reference={trace} />;
+  if (lot) return <LotDossier state={state} lotId={lot} />;
+
   return (
     <>
       {current === "home" && <AdminHome state={state} board={board} nowIso={nowIso} me={me} />}
-      {current === "registrations" && (
+      {current === "registrations" && entity && <EntityDossier state={state} entityId={entity} />}
+      {current === "registrations" && !entity && (
         <>
-          <PageHeader kicker="Operations" title="Registrations" lede="Approve, request more information, reject or suspend. Submission never activates an account on its own." />
+          <PageHeader
+            kicker="Operations"
+            title="Registrations"
+            lede="Approve, request more information, reject or suspend. Submission never activates an account on its own. Open any participant to see everything the registry holds on them."
+          />
           <RegistrationsTab state={state} />
         </>
       )}
@@ -52,6 +70,16 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <>
           <PageHeader kicker="Market" title="National Pool" lede="Concentrate is offered to smelters. Refined tin is offered to domestic buyers. Those are two different boards." />
           <OffersTab state={state} board={board} nowIso={nowIso} />
+        </>
+      )}
+      {current === "royalty" && (
+        <>
+          <PageHeader
+            kicker="Fiscal"
+            title="Royalty ledger"
+            lede="Every royalty liability on the register: what was assessed, who carries it now, and whether NM-EX has been paid."
+          />
+          <RoyaltyTab state={state} />
         </>
       )}
       {current === "settlements" && (

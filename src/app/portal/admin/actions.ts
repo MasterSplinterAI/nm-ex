@@ -11,6 +11,7 @@ import {
   markSampleReceived,
   recordCollection,
   recordPayment,
+  recordRoyaltySettlement,
   reviewRegistration,
   setCertificateStatus,
   updatePolicy,
@@ -95,6 +96,16 @@ export async function certificateStatusAction(_p: ActionResult, fd: FormData): P
       setCertificateStatus(s, ctx, { certNo: str(fd, "certNo"), status, note: str(fd, "note") || null }),
     );
     return `${cert.certNo} is now ${status}.`;
+  });
+}
+
+export async function settleRoyaltyAction(_p: ActionResult, fd: FormData): Promise<ActionResult> {
+  return guarded(async () => {
+    const actor = await officer();
+    const cert = await mutate(actor, (s, ctx) =>
+      recordRoyaltySettlement(s, ctx, { certNo: str(fd, "certNo"), reference: str(fd, "reference") }),
+    );
+    return `Royalty on ${cert.certNo} recorded as received.`;
   });
 }
 

@@ -1,6 +1,4 @@
 import { redirect } from "next/navigation";
-import { ActionButton, ActionForm } from "@/components/portal/action-button";
-import { inputClass, labelClass } from "@/components/portal/form-styles";
 import { Countdown } from "@/components/portal/countdown";
 import { Empty } from "@/components/portal/empty";
 import { Money } from "@/components/portal/money";
@@ -11,7 +9,20 @@ import { demoNowIso } from "@/lib/dmo/clock";
 import { tabFromSearch } from "@/lib/dmo/nav";
 import { CERT_CLASS_LABEL } from "@/lib/dmo/labels";
 import { mmlKgForTier } from "@/lib/dmo/policy";
-import { certificatesFor, inspectionForLot, inventoryFor, lotsFor, offerForLot, participantById } from "@/lib/dmo/queries";
+import {
+  certificatesFor,
+  inspectionForLot,
+  inventoryFor,
+  lotsFor,
+  offerForLot,
+  participantById,
+  purchasesFor,
+  registeredSellers,
+  salesToShedsFor,
+} from "@/lib/dmo/queries";
+import { placeFromAddress } from "@/lib/dmo/facilities";
+import { isDirectMine, supplierVocab } from "@/lib/dmo/supplier-vocab";
+import { AddPurchase } from "./add-purchase";
 import { getSession } from "@/lib/dmo/session";
 import { readState } from "@/lib/dmo/store";
 import { referenceValueNgn } from "@/lib/dmo/valuation";
@@ -19,7 +30,6 @@ import { readSpotBoard } from "@/lib/store";
 import { PageHeader } from "../page-header";
 import { ListingDetail } from "@/components/portal/listing-detail";
 import { lotBundle } from "@/lib/dmo/lot-view";
-import { addPurchaseAction } from "./actions";
 import { AssayResults } from "./assay-results";
 import { SupplierConsolidate } from "./consolidate";
 import { SupplierHome } from "./home";
@@ -41,6 +51,15 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
   const me = participantById(state, session.participantId)!;
   const nowIso = demoNowIso(state);
   const inv = inventoryFor(state, me.id);
+  const allPurchases = purchasesFor(state, me.id);
+  const soldToSheds = salesToShedsFor(state, me.id);
+  const sellers = registeredSellers(state, me.id).map((p) => ({
+    id: p.id,
+    legalName: p.legalName,
+    place: placeFromAddress(p.address),
+  }));
+  const vocab = supplierVocab(me.category);
+  const mine = isDirectMine(me.category);
   const lots = lotsFor(state, me.id);
   const certs = certificatesFor(state, me.id);
   const lme = board.minerals.find((m) => m.slug === "tin")?.lastUsd ?? 0;
@@ -73,13 +92,13 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
       {active !== "home" && active !== "consolidate" && !(active === "lots" && lotId) && active !== "listing" && (
         <PageHeader
           kicker="Supplier"
-          title={active === "ledger" ? "Purchase logs" : active === "lots" ? "Assay & inspection" : "Certificates"}
+          title={active === "ledger" ? vocab.ledgerTitle : active === "lots" ? "Assay & inspection" : "Certificates"}
           lede={me.regNo ?? undefined}
         />
       )}
 
       {active === "ledger" && (
-        <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
+        <div className="space-y-6">
           <div className="space-y-6">
             <Panel kicker="Minimum marketable lot" title="Eligible inventory">
               <div className="grid gap-4 sm:grid-cols-2">
@@ -90,7 +109,7 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
                   const ready = kg >= mml;
                   return (
                     <div key={tier} className="portal-card p-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">
+                      <p className="eyebrow">
                         Tier {tier} · {tier === 1 ? `above ${state.policy.tier1MinGradePct}% Sn` : `${state.policy.tier1MinGradePct}% Sn and below`}
                       </p>
                       <p className="font-display mt-1 text-3xl tabular-nums">
@@ -121,77 +140,115 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
               </div>
             </Panel>
 
-            <Panel kicker="Unallocated purchases" title="Ledger entries">
-              {inv.entries.length === 0 ? (
-                <Empty>No unallocated purchases. Every entry has been submitted in a lot.</Empty>
+            <Panel
+              kicker={`${allPurchases.length} record${allPurchases.length === 1 ? "" : "s"} · ${inv.entries.length} unallocated · ${allPurchases.length - inv.entries.length} locked into a lot`}
+              title={vocab.logTitle}
+              actions={
+                <AddPurchase
+                  sellers={sellers}
+                  vocab={vocab}
+                  today={nowIso.slice(0, 10)}
+                  guidePerKgNgn={
+                    mine
+                      ? `Selling direct you take the full ${state.policy.coefToSmelter * 100}% smelter coefficient — no shed margin in between.`
+                      : `Guide today: ~${formatNgn((lme * board.fx.rate * state.policy.coefMinerToAggregator) / 1000)} per kg of contained tin (LME × FX × ${state.policy.coefMinerToAggregator}).`
+                  }
+                />
+              }
+            >
+              {allPurchases.length === 0 ? (
+                <Empty>{vocab.emptyLedger}</Empty>
               ) : (
-                <table className="w-full text-sm">
-                  <thead className="text-left text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
-                    <tr>
-                      <th className="pb-2 font-semibold">Purchase ID</th>
-                      <th className="pb-2 font-semibold">Date</th>
-                      <th className="pb-2 font-semibold">Source</th>
-                      <th className="pb-2 font-semibold">Your reference</th>
-                      <th className="pb-2 text-right font-semibold">Weight</th>
-                      <th className="pb-2 text-right font-semibold">Grade</th>
-                      <th className="pb-2 text-right font-semibold">Paid</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--line)]">
-                    {[...inv.entries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)).map((e) => (
-                      <tr key={e.id}>
-                        <td className="py-2 tabular-nums font-semibold">{e.id}</td>
-                        <td className="py-2 tabular-nums">{e.date}</td>
-                        <td className="py-2">{e.source}</td>
-                        <td className="py-2 tabular-nums text-[var(--ink-muted)]">{e.reference || "—"}</td>
-                        <td className="py-2 text-right tabular-nums">{formatKg(e.kg)}</td>
-                        <td className="py-2 text-right tabular-nums">{formatPct(e.gradePct, 2)}</td>
-                        <td className="py-2 text-right tabular-nums">{formatNgn(e.valueNgn)}</td>
+                <div className="overflow-x-auto">
+                  <table className="data-table w-full text-sm">
+                    <thead className="table-head">
+                      <tr>
+                        <th className="py-2">Purchase ID</th>
+                        <th className="py-2">Date</th>
+                        <th className="py-2">{vocab.sourceColumn}</th>
+                        <th className="py-2">Your reference</th>
+                        <th className="py-2 text-right">Weight</th>
+                        <th className="py-2 text-right">Grade</th>
+                        <th className="py-2 text-right">{vocab.costColumn}</th>
+                        <th className="py-2">Lot</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--rule)]">
+                      {allPurchases.map((e) => (
+                        <tr key={e.id} className="hover:bg-[#1b4d38]/[0.04]">
+                          <td className="py-2 tabular-nums font-semibold">{e.id}</td>
+                          <td className="py-2 tabular-nums">{e.date}</td>
+                          <td className="py-2">
+                            {e.source}
+                            <span className={`ml-1.5 text-[11px] ${e.sourceParticipantId ? "text-[#1b4d38]" : "text-[var(--ink-soft)]"}`}>
+                              {e.sourceParticipantId ? "· registered" : "· unregistered"}
+                            </span>
+                          </td>
+                          <td className="py-2 tabular-nums text-[var(--ink-muted)]">{e.reference || "—"}</td>
+                          <td className="py-2 text-right tabular-nums">{formatKg(e.kg)}</td>
+                          <td className="py-2 text-right tabular-nums">{formatPct(e.gradePct, 2)}</td>
+                          <td className="py-2 text-right tabular-nums">{formatNgn(e.valueNgn)}</td>
+                          <td className="py-2">
+                            {e.lotId ? (
+                              <a
+                                href={`/portal/supplier?tab=lots&lot=${encodeURIComponent(e.lotId)}`}
+                                className="tabular-nums text-sm font-semibold text-[#1f4b6b] hover:underline"
+                              >
+                                {e.lotId} →
+                              </a>
+                            ) : (
+                              <span className="text-xs text-[var(--ink-soft)]">Unallocated</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
+              <p className="mt-3 text-xs text-[var(--ink-muted)]">{vocab.ledgerLede}</p>
             </Panel>
-          </div>
 
-          <Panel kicker="Record a purchase" title="New ledger entry" className="self-start">
-            <ActionForm action={addPurchaseAction} inline={false}>
-              <label className="block">
-                <span className={labelClass}>Date</span>
-                <input name="date" type="date" defaultValue={nowIso.slice(0, 10)} className={`${inputClass} mt-1`} required />
-              </label>
-              <label className="block">
-                <span className={labelClass}>Source (miner / cooperative / site)</span>
-                <input name="source" className={`${inputClass} mt-1`} placeholder="e.g. Rayfield cooperative" required />
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className={labelClass}>Weight (kg)</span>
-                  <input name="kg" type="number" step="0.1" min="0.1" className={`${inputClass} mt-1`} defaultValue={50} required />
-                </label>
-                <label className="block">
-                  <span className={labelClass}>Grade (% Sn)</span>
-                  <input name="gradePct" type="number" step="0.01" min="0.01" max="100" className={`${inputClass} mt-1`} defaultValue={72} required />
-                </label>
-              </div>
-              <label className="block">
-                <span className={labelClass}>Amount paid (₦)</span>
-                <input name="valueNgn" type="number" step="1" min="0" className={`${inputClass} mt-1`} defaultValue={2_175_000} />
-              </label>
-              <label className="block">
-                <span className={labelClass}>Your reference (optional)</span>
-                <input name="reference" className={`${inputClass} mt-1`} placeholder="e.g. RCPT-4421 or cash book folio" />
-                <span className="mt-1 block text-xs text-[var(--ink-muted)]">
-                  Cross-reference against your own books. NM-EX assigns a unique purchase ID when you save.
-                </span>
-              </label>
-              <ActionButton pendingText="Recording…">Add to ledger</ActionButton>
-              <p className="text-xs text-[var(--ink-muted)]">
-                Shed price guide today: ~{formatNgn((lme * board.fx.rate * state.policy.coefMinerToAggregator) / 1000)} per kg of contained tin (LME × FX × {state.policy.coefMinerToAggregator}).
-              </p>
-            </ActionForm>
-          </Panel>
+            {soldToSheds.length > 0 && (
+              <Panel
+                kicker={`${soldToSheds.length} parcel${soldToSheds.length === 1 ? "" : "s"}`}
+                title="Sold to tin sheds"
+              >
+                <p className="mb-3 text-sm text-[var(--ink-muted)]">
+                  Parcels a shed recorded against your NM-EX account. You are named on their ledger, and the tin stays
+                  traceable to you through to export.
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="data-table w-full text-sm">
+                    <thead className="table-head">
+                      <tr>
+                        <th className="py-2">Purchase ID</th>
+                        <th className="py-2">Date</th>
+                        <th className="py-2">Bought by</th>
+                        <th className="py-2 text-right">Weight</th>
+                        <th className="py-2 text-right">Grade</th>
+                        <th className="py-2 text-right">Paid to you</th>
+                        <th className="py-2">Their lot</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--rule)]">
+                      {soldToSheds.map((e) => (
+                        <tr key={e.id}>
+                          <td className="py-2 tabular-nums font-semibold">{e.id}</td>
+                          <td className="py-2 tabular-nums">{e.date}</td>
+                          <td className="py-2">{participantById(state, e.supplierId)?.legalName ?? "—"}</td>
+                          <td className="py-2 text-right tabular-nums">{formatKg(e.kg)}</td>
+                          <td className="py-2 text-right tabular-nums">{formatPct(e.gradePct, 2)}</td>
+                          <td className="py-2 text-right tabular-nums">{formatNgn(e.valueNgn)}</td>
+                          <td className="py-2 tabular-nums text-[var(--ink-muted)]">{e.lotId ?? "Not yet consolidated"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Panel>
+            )}
+          </div>
         </div>
       )}
 
@@ -236,14 +293,14 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
                   <div className="mt-4 grid gap-4 text-sm sm:grid-cols-3">
                     {insp && insp.status === "awaiting_sample" && (
                       <div>
-                        <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">Deliver sample to</p>
+                        <p className="eyebrow">Deliver sample to</p>
                         <p>{insp.warehouse}</p>
                         <Countdown untilIso={insp.windowEndsAt} nowIso={nowIso} label="Window" className="text-xs" />
                       </div>
                     )}
                     {offer && offer.status === "open" && (
                       <div>
-                        <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">Offered to qualified {offer.audience}</p>
+                        <p className="eyebrow">Offered to qualified {offer.audience}</p>
                         <Countdown untilIso={offer.closesAt} nowIso={nowIso} label="Closes in" />
                         <p className="text-xs text-[var(--ink-muted)]">If no smelter accepts, an export clearance issues automatically.</p>
                       </div>
@@ -251,18 +308,18 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
                     {ref != null && offer?.status === "open" && (
                       <>
                         <div>
-                          <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">Indicative you would receive (× {state.policy.coefToSmelter})</p>
+                          <p className="eyebrow">Indicative you would receive (× {state.policy.coefToSmelter})</p>
                           <Money ngn={ref * state.policy.coefToSmelter} size="sm" tone="green" />
                         </div>
                         <div>
-                          <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">Royalty you would owe if exported</p>
+                          <p className="eyebrow">Royalty you would owe if exported</p>
                           <Money ngn={ref * (state.policy.royaltyPct / 100)} size="sm" tone="red" />
                         </div>
                       </>
                     )}
                     {lotCerts.map((c) => (
                       <div key={c.certNo}>
-                        <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">{CERT_CLASS_LABEL[c.cls]}</p>
+                        <p className="eyebrow">{CERT_CLASS_LABEL[c.cls]}</p>
                         <a href={`/certificates/${c.certNo}`} className="tabular-nums font-semibold underline-offset-4 hover:underline">{c.certNo}</a>
                         <span className="ml-2"><CertStatusPill status={c.status} /></span>
                       </div>
@@ -291,7 +348,7 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
             <Empty>No certificates yet.</Empty>
           ) : (
             <table className="w-full text-sm">
-              <thead className="text-left text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+              <thead className="table-head">
                 <tr>
                   <th className="pb-2 font-semibold">Certificate</th>
                   <th className="pb-2 font-semibold">Class</th>

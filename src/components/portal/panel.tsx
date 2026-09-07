@@ -18,13 +18,9 @@ export function Panel({ kicker, title, actions, children, className = "", id }: 
       {(kicker || title || actions) && (
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            {kicker && (
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--forest)]">
-                {kicker}
-              </p>
-            )}
+            {kicker && <p className="eyebrow text-[var(--forest)]">{kicker}</p>}
             {title && (
-              <h2 className="font-display mt-1 text-lg tracking-tight text-[var(--ink)] sm:text-xl">
+              <h2 className="font-display mt-1 text-lg text-[var(--ink)] sm:text-xl">
                 {title}
               </h2>
             )}
@@ -38,9 +34,5 @@ export function Panel({ kicker, title, actions, children, className = "", id }: 
 }
 
 export function Kicker({ children }: { children: ReactNode }) {
-  return (
-    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">
-      {children}
-    </p>
-  );
+  return <p className="eyebrow">{children}</p>;
 }

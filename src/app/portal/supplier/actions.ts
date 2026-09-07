@@ -13,6 +13,7 @@ export async function addPurchaseAction(_p: ActionResult, fd: FormData): Promise
         supplierId: session.participantId,
         date: str(fd, "date") || ctx.nowIso.slice(0, 10),
         source: str(fd, "source"),
+        sourceParticipantId: str(fd, "sourceParticipantId") || null,
         kg: num(fd, "kg"),
         gradePct: num(fd, "gradePct"),
         valueNgn: num(fd, "valueNgn", 0),

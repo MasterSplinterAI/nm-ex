@@ -1,10 +1,12 @@
-import type { Role } from "./types";
+import type { ParticipantCategory, Role } from "./types";
+import { supplierVocab } from "./supplier-vocab";
 import {
   inspectionQueue,
   openOffers,
   pendingAcceptances,
   pendingRegistrations,
   poolFor,
+  royaltyPositions,
 } from "./queries";
 import type { DemoState } from "./types";
 import { eligibleInventory } from "./workflow";
@@ -27,6 +29,7 @@ export function navCounts(state: DemoState, participantId: string, role: Role): 
       offers: openOffers(state).length,
       settlements: pendingAcceptances(state).length,
       certificates: state.certificates.length,
+      royalty: royaltyPositions(state).filter((r) => !r.settled).length,
     };
   }
   if (role === "smelter") {
@@ -44,6 +47,7 @@ export function navCounts(state: DemoState, participantId: string, role: Role): 
       acceptances: pendingSettle,
       inventory: collected,
       refined: unsmelted,
+      royalty: royaltyPositions(state).filter((r) => r.holderId === participantId && !r.settled).length,
       certificates: state.certificates.filter((c) => c.supplierId === participantId || c.counterpartyId === participantId).length,
     };
   }
@@ -74,7 +78,11 @@ export function navCounts(state: DemoState, participantId: string, role: Role): 
   };
 }
 
-export function navFor(role: Role, counts: NavCounts): NavItem[] {
+export function navFor(
+  role: Role,
+  counts: NavCounts,
+  category: ParticipantCategory | null = null,
+): NavItem[] {
   switch (role) {
     case "officer":
       return [
@@ -84,6 +92,7 @@ export function navFor(role: Role, counts: NavCounts): NavItem[] {
         { id: "offers", href: "/portal/admin?tab=offers", label: "National Pool", badge: counts.offers, group: "Operations" },
         { id: "settlements", href: "/portal/admin?tab=settlements", label: "Settlements", badge: counts.settlements, group: "Operations" },
         { id: "certificates", href: "/portal/admin?tab=certificates", label: "Certificates", badge: counts.certificates, group: "Register" },
+        { id: "royalty", href: "/portal/admin?tab=royalty", label: "Royalty ledger", badge: counts.royalty, group: "Register" },
         { id: "reports", href: "/portal/admin?tab=reports", label: "Traceability report", group: "Register" },
         { id: "audit", href: "/portal/admin?tab=audit", label: "Audit trail", group: "Register" },
         { id: "policy", href: "/portal/admin?tab=policy", label: "Policy", group: "Control" },
@@ -96,12 +105,13 @@ export function navFor(role: Role, counts: NavCounts): NavItem[] {
         { id: "acceptances", href: "/portal/smelter?tab=acceptances", label: "Acceptances", badge: counts.acceptances, group: "Market" },
         { id: "inventory", href: "/portal/smelter?tab=inventory", label: "Inventory", badge: counts.inventory, group: "Plant" },
         { id: "refined", href: "/portal/smelter?tab=refined", label: "Refined output", badge: counts.refined, group: "Plant" },
-        { id: "certificates", href: "/portal/smelter?tab=certificates", label: "Certificates & royalty", badge: counts.certificates, group: "Compliance" },
+        { id: "royalty", href: "/portal/smelter?tab=royalty", label: "Royalty position", badge: counts.royalty, group: "Compliance" },
+        { id: "certificates", href: "/portal/smelter?tab=certificates", label: "Certificates", badge: counts.certificates, group: "Compliance" },
       ];
     case "supplier":
       return [
         { id: "home", href: "/portal/supplier", label: "Dashboard" },
-        { id: "ledger", href: "/portal/supplier?tab=ledger", label: "Purchase logs", badge: counts.ledger },
+        { id: "ledger", href: "/portal/supplier?tab=ledger", label: supplierVocab(category).ledgerNav, badge: counts.ledger },
         { id: "consolidate", href: "/portal/supplier?tab=consolidate", label: "Lot consolidation", badge: counts.consolidate },
         { id: "lots", href: "/portal/supplier?tab=lots", label: "Assay & inspection", badge: counts.lots },
         { id: "listing", href: "/portal/supplier?tab=listing", label: "National Pool", badge: counts.listing },

@@ -104,7 +104,7 @@ export default async function VerifierPage({ searchParams }: { searchParams: Pro
       {(showRegister || (!query && !showRegister)) && (
         <Panel kicker="Register" title="Export clearance certificates">
           <table className="w-full text-sm">
-            <thead className="text-left text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+            <thead className="table-head">
               <tr>
                 <th className="pb-2 font-semibold">Certificate</th>
                 <th className="pb-2 font-semibold">Lot</th>

@@ -12,7 +12,7 @@ export function AuditTab({ state }: { state: DemoState }) {
       </p>
       <div className="max-h-[70vh] overflow-auto border border-[var(--line)]">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-[var(--paper)] text-left text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+          <thead className="table-head sticky top-0">
             <tr>
               <th className="px-3 py-2 font-semibold">When (WAT)</th>
               <th className="px-3 py-2 font-semibold">Actor</th>

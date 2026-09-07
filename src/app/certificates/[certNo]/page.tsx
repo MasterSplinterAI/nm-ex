@@ -33,6 +33,14 @@ export default async function CertificatePage({ params }: { params: Promise<{ ce
           ← Back to portal
         </a>
         <div className="flex items-center gap-3">
+          {session.role === "officer" && (
+            <a
+              href={`/portal/admin?trace=${encodeURIComponent(view.certNo)}`}
+              className="inline-flex h-9 items-center rounded-lg bg-[#1b4d38] px-3 text-sm font-semibold text-white hover:bg-[#163d2c]"
+            >
+              Trace to source
+            </a>
+          )}
           <a href={`/verify?no=${encodeURIComponent(view.certNo)}`} className="text-sm text-[var(--ink-muted)] underline-offset-4 hover:underline">
             Public verification view
           </a>

@@ -19,17 +19,46 @@ function isActive(item: NavItem, pathname: string, tab: string | null): boolean 
   return tab === itemTab;
 }
 
+/**
+ * The live board figures every screen prices against. Pre-formatted on the
+ * server: number formatting differs between the Node and browser locale data,
+ * which desynchronises hydration if each side formats for itself.
+ */
+export type HeaderBoard = { tin: string; tinChangePct: number | null; fx: string };
+
+function Ticker({ label, value, changePct }: { label: string; value: string; changePct?: number | null }) {
+  const up = changePct != null && changePct > 0;
+  const down = changePct != null && changePct < 0;
+  return (
+    <div className="rounded-lg border border-[var(--line-strong)] bg-white px-2.5 py-1 leading-tight">
+      <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">{label}</p>
+      <p className="flex items-baseline gap-1.5">
+        <span className="text-sm font-bold tabular-nums">{value}</span>
+        {changePct != null && (
+          <span className={`text-[10px] font-semibold tabular-nums ${up ? "text-[#1b4d38]" : down ? "text-[#9b2c2c]" : "text-[var(--ink-soft)]"}`}>
+            {up ? "▲" : down ? "▼" : ""}
+            {Math.abs(changePct).toFixed(2)}%
+          </span>
+        )}
+      </p>
+    </div>
+  );
+}
+
 export function PortalShell({
   participant,
   nav,
-  demoNowIso,
+  demoNowLabel,
   clockOffsetMs,
+  board,
   children,
 }: {
   participant: Participant;
   nav: NavItem[];
-  demoNowIso: string;
+  /** Pre-formatted on the server — see HeaderBoard. */
+  demoNowLabel: string;
   clockOffsetMs: number;
+  board?: HeaderBoard;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -148,10 +177,16 @@ export function PortalShell({
               <NigeriaFlag className="hidden h-4 w-6 shrink-0 shadow-sm sm:block" />
             </a>
           </div>
-          <p className="hidden text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)] lg:block">
+          <p className="hidden text-center eyebrow xl:block">
             A stronger Nigeria through responsible minerals
           </p>
           <div className="flex items-center gap-2 sm:gap-3">
+            {board && (
+              <div className="hidden items-center gap-2 md:flex">
+                <Ticker label="LME tin (USD/t)" value={board.tin} changePct={board.tinChangePct} />
+                <Ticker label="FX (₦/$)" value={board.fx} />
+              </div>
+            )}
             <a
               href={nav.find((n) => n.badge)?.href ?? homeHref}
               className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--ink-muted)] hover:bg-[var(--paper)] hover:text-[var(--ink)]"
@@ -177,14 +212,7 @@ export function PortalShell({
                 </span>
               </summary>
               <div className="absolute right-0 z-50 mt-1 w-56 rounded-xl border border-[var(--line)] bg-white p-2 text-sm shadow-lg">
-                {shifted && (
-                  <p className="px-2 py-1.5 text-xs text-[var(--copper)]">
-                    Demo clock{" "}
-                    {new Intl.DateTimeFormat("en-NG", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Lagos" }).format(
-                      new Date(demoNowIso),
-                    )}
-                  </p>
-                )}
+                {shifted && <p className="px-2 py-1.5 text-xs text-[var(--copper)]">Demo clock {demoNowLabel}</p>}
                 <a href="/" className="block rounded-lg px-2 py-2 hover:bg-[var(--paper)]">
                   Spot board
                 </a>

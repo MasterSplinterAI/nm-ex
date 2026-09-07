@@ -42,7 +42,7 @@ export function PolicyTab({ state }: { state: DemoState }) {
         </div>
       </ActionForm>
       <div className="mt-6 border-t border-[var(--line)] pt-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">Approved warehouses</p>
+        <p className="eyebrow">Approved warehouses</p>
         <ul className="mt-2 text-sm">
           {p.warehouses.map((w) => (
             <li key={w}>{w}</li>

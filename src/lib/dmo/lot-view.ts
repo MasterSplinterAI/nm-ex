@@ -1,3 +1,4 @@
+import { formatNgnPrecise, formatUsd } from "@/lib/format";
 import { placeFromAddress } from "./facilities";
 import type { Acceptance, DemoState, Inspection, Lot, Offer, Participant, PurchaseEntry } from "./types";
 import { referenceValueNgn } from "./valuation";
@@ -47,6 +48,67 @@ export function lotEconomics(lot: Lot, policy: DemoState["policy"], lmeUsd: numb
   const royalty = reference * (policy.royaltyPct / 100);
   const containedKg = kg * (grade / 100);
   return { kg, grade, containedKg, reference, coef, listing, vat, royalty, lmeUsd, fxRate };
+}
+
+export type LotEconomics = ReturnType<typeof lotEconomics>;
+
+export type Formula = { label: string; expression: string; result: string };
+
+function pct(value: number, digits: number): string {
+  return `${Number.parseFloat(value.toFixed(digits))}%`;
+}
+
+function tonnes(kg: number): string {
+  return kg.toLocaleString("en-NG", { minimumFractionDigits: 5, maximumFractionDigits: 5 });
+}
+
+/**
+ * The arithmetic behind every figure on a listing, written out with the numbers
+ * actually used. Shown under the money so nobody has to ask how it was reached.
+ */
+export function lotFormulas(e: LotEconomics, policy: DemoState["policy"]): {
+  reference: Formula;
+  listing: Formula;
+  royalty: Formula;
+  vat: Formula;
+} {
+  const metal = `${formatUsd(e.lmeUsd)} × ${pct(e.grade, 4)} × ${tonnes(e.kg / 1000)} t × ₦${e.fxRate.toLocaleString("en-NG")}`;
+  return {
+    reference: {
+      label: "Verified metal value (no coefficient)",
+      expression: metal,
+      result: formatNgnPrecise(e.reference),
+    },
+    listing: {
+      label: "Total sell price (listing price)",
+      expression: `${pct(e.coef * 100, 1)} × ${metal}`,
+      result: formatNgnPrecise(e.listing),
+    },
+    royalty: {
+      label: `Royalty (${policy.royaltyPct}%)`,
+      expression: `${policy.royaltyPct}% × ${metal}`,
+      result: formatNgnPrecise(e.royalty),
+    },
+    vat: {
+      label: `VAT (${policy.vatPct}%)`,
+      expression: `${policy.vatPct}% × ${formatNgnPrecise(e.listing)}`,
+      result: formatNgnPrecise(e.vat),
+    },
+  };
+}
+
+/** The same three rules stated generally, for a board showing many lots. */
+export function poolFormulas(
+  policy: DemoState["policy"],
+  lmeUsd: number,
+  fxRate: number,
+): { label: string; expression: string }[] {
+  const metal = `${formatUsd(lmeUsd)} × grade × (weight ÷ 1,000) × ₦${fxRate.toLocaleString("en-NG")}`;
+  return [
+    { label: "Listing price", expression: `${pct(policy.coefToSmelter * 100, 1)} × ${metal}` },
+    { label: `Royalty (${policy.royaltyPct}%)`, expression: `${policy.royaltyPct}% × ${metal}` },
+    { label: `VAT (${policy.vatPct}%)`, expression: `${policy.vatPct}% of the listing price` },
+  ];
 }
 
 export function originLine(p: Participant): string {

@@ -172,7 +172,7 @@ function HeroQuote({
 }) {
   return (
     <div className="mt-3">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
+      <p className="eyebrow">
         {label}
       </p>
       <p className="mt-1 break-words font-display text-3xl tracking-tight text-[var(--ink)] sm:text-4xl">

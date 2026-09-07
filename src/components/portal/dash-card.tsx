@@ -30,7 +30,7 @@ export function DashCard({
       href={href}
       className="portal-card group flex min-w-0 flex-col p-4 transition hover:border-[var(--forest)]"
     >
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">{kicker}</p>
+      <p className="eyebrow">{kicker}</p>
       <h3 className="font-display mt-2 text-lg leading-tight text-[var(--ink)] group-hover:text-[var(--forest)]">{title}</h3>
       {value != null && (
         <p className={`font-display mt-2 break-words text-2xl tabular-nums leading-tight sm:text-3xl ${valueColor}`}>{value}</p>

@@ -28,9 +28,24 @@ export function CertificatesTab({ state }: { state: DemoState }) {
                 <div className="flex flex-wrap items-center gap-3">
                   <a href={`/certificates/${c.certNo}`} className="font-display text-lg tabular-nums underline-offset-4 hover:underline">{c.certNo}</a>
                   <CertStatusPill status={c.status} />
+                  <a
+                    href={`/portal/admin?trace=${encodeURIComponent(c.certNo)}`}
+                    className="inline-flex h-7 items-center rounded-md border border-[#1b4d38]/30 bg-[#1b4d38]/8 px-2.5 text-xs font-semibold text-[#1b4d38] hover:bg-[#1b4d38]/15"
+                  >
+                    Trace to source
+                  </a>
                 </div>
                 <p className="mt-1 text-sm text-[var(--ink-muted)]">
-                  {c.lotId} · {participantName(state, c.supplierId)}
+                  <a href={`/portal/admin?lot=${encodeURIComponent(c.lotId)}`} className="font-semibold text-[#1f4b6b] hover:underline">
+                    {c.lotId}
+                  </a>{" "}
+                  ·{" "}
+                  <a
+                    href={`/portal/admin?tab=registrations&entity=${encodeURIComponent(c.supplierId)}`}
+                    className="font-semibold text-[#1f4b6b] hover:underline"
+                  >
+                    {participantName(state, c.supplierId)}
+                  </a>
                   {c.counterpartyId && <> → {participantName(state, c.counterpartyId)}</>} · issued {formatDateTime(c.issuedAt)} · LME US${c.priceRef.lmeUsd.toLocaleString("en-US")} / ₦{c.priceRef.fxRate.toLocaleString("en-NG")}
                 </p>
                 <p className="mt-1 text-sm">

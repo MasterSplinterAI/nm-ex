@@ -49,7 +49,7 @@ export function SupplierHome({ state, me, nowIso }: { state: DemoState; me: Part
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="text-left text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+                <thead className="table-head">
                   <tr>
                     <th className="px-5 pb-2 pt-3 font-semibold">Purchase ID</th>
                     <th className="pb-2 pt-3 font-semibold">Date</th>

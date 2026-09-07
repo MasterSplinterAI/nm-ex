@@ -36,9 +36,9 @@ export function KpiTile({
         </svg>
       </span>
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">{label}</p>
+        <p className="eyebrow">{label}</p>
         <p className="font-display mt-1 break-words text-2xl tabular-nums leading-tight">{value}</p>
-        {hint && <p className="mt-1 text-xs leading-snug text-[var(--ink-muted)]">{hint}</p>}
+        {hint && <p className="mt-1 text-xs leading-snug text-[var(--ink-soft)]">{hint}</p>}
       </div>
     </>
   );
@@ -74,9 +74,7 @@ export function StatusTile({
         ok ? "border-transparent bg-[#1b4d38] text-white" : "bg-white"
       }`}
     >
-      <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${ok ? "text-white/70" : "text-[var(--ink-muted)]"}`}>
-        {label}
-      </p>
+      <p className={`eyebrow ${ok ? "text-white/75" : ""}`}>{label}</p>
       <p className="mt-2 flex items-start gap-2 text-sm font-semibold leading-snug">
         <span className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${ok ? "bg-white/20" : "bg-[var(--paper)]"}`}>
           {ok ? "✓" : "!"}

@@ -10,6 +10,7 @@ import {
   markSampleReceived,
   recordCollection,
   recordPayment,
+  recordRoyaltySettlement,
   registerRefinedLot,
   reviewRegistration,
   setCertificateStatus,
@@ -18,6 +19,7 @@ import {
   verifyLot,
 } from "./workflow";
 import { WorkflowError, type DemoState, type PriceRef } from "./types";
+import { royaltyPositions, royaltyTotals } from "./queries";
 
 const NOW = "2026-09-01T09:00:00.000Z";
 const PRICE: PriceRef = { lmeUsd: 55_225, fxRate: 1_322, at: NOW };
@@ -198,6 +200,48 @@ test("submit records the chosen warehouse", () => {
   const warehouse = "NM-EX Approved Warehouse & Assay Centre — Lagos";
   const { inspection } = submitForInspection(s, ctx, { supplierId: sup.id, tier: 1, kg: 1000, warehouse });
   assert.equal(inspection.warehouse, warehouse);
+});
+
+test("royalty settlement answers who owes it and whether NM-EX has been paid", () => {
+  const s = emptyState(NOW);
+  const sup = approvedSupplier(s);
+  const smelter = approvedSmelter(s);
+  const lot = verified25t(s, sup.id);
+  const offer = s.offers.find((o) => o.lotId === lot.id)!;
+  const { certificate } = acceptOffer(s, { ...officer, actorId: smelter.id }, { offerId: offer.id, acceptorId: smelter.id });
+
+  // A DMO-A moves the liability onto the smelter without anything falling due.
+  const before = royaltyPositions(s).find((r) => r.certNo === certificate.certNo)!;
+  assert.equal(before.holderId, smelter.id);
+  assert.equal(before.transferred, true);
+  assert.equal(before.dueNowNgn, 0);
+  assert.ok(before.assessedNgn > 0);
+  assert.equal(before.settled, false);
+  assert.equal(royaltyTotals(royaltyPositions(s)).outstanding, before.assessedNgn);
+
+  recordRoyaltySettlement(s, officer, { certNo: certificate.certNo, reference: "RRR-8891" });
+
+  const after = royaltyPositions(s).find((r) => r.certNo === certificate.certNo)!;
+  assert.equal(after.settled, true);
+  assert.equal(after.settlementRef, "RRR-8891");
+  assert.equal(royaltyTotals(royaltyPositions(s)).outstanding, 0);
+  assert.ok(s.audit.some((e) => e.action === "royalty.settled"));
+
+  // Settling twice would double-count the receipt.
+  assert.throws(() => recordRoyaltySettlement(s, officer, { certNo: certificate.certNo, reference: "x" }), WorkflowError);
+});
+
+test("only an officer may record a royalty receipt", () => {
+  const s = emptyState(NOW);
+  const sup = approvedSupplier(s);
+  const smelter = approvedSmelter(s);
+  const lot = verified25t(s, sup.id);
+  const offer = s.offers.find((o) => o.lotId === lot.id)!;
+  const { certificate } = acceptOffer(s, { ...officer, actorId: smelter.id }, { offerId: offer.id, acceptorId: smelter.id });
+  assert.throws(
+    () => recordRoyaltySettlement(s, { ...officer, actorId: smelter.id }, { certNo: certificate.certNo, reference: "" }),
+    WorkflowError,
+  );
 });
 
 test("certificate status changes append history and UTILIZED closes the lot", () => {

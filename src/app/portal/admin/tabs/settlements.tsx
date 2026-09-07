@@ -24,12 +24,20 @@ export function SettlementsTab({ state, nowIso }: { state: DemoState; nowIso: st
           {rows.map(({ acceptance, lot, acceptor }) => (
             <article key={acceptance.id} className="grid gap-4 border border-[var(--line)] bg-white/70 p-5 lg:grid-cols-[1fr_auto]">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">{acceptor.legalName} · {acceptor.regNo}</p>
+                <p className="eyebrow">
+                  <a href={`/portal/admin?tab=registrations&entity=${encodeURIComponent(acceptor.id)}`} className="hover:underline">
+                    {acceptor.legalName}
+                  </a>{" "}
+                  · {acceptor.regNo}
+                </p>
                 <h3 className="font-display mt-1 text-xl tabular-nums">
                   <a href={`/certificates/${acceptance.certNo}`} className="underline-offset-4 hover:underline">{acceptance.certNo}</a>
                 </h3>
                 <p className="text-sm text-[var(--ink-muted)]">
-                  {lot.id} · {formatKg(lot.verifiedKg)} @ {formatPct(lot.verifiedGradePct!, 2)} Sn · accepted {formatDateTime(acceptance.acceptedAt)}
+                  <a href={`/portal/admin?lot=${encodeURIComponent(lot.id)}`} className="font-semibold text-[#1f4b6b] hover:underline">
+                    {lot.id}
+                  </a>{" "}
+                  · {formatKg(lot.verifiedKg)} @ {formatPct(lot.verifiedGradePct!, 2)} Sn · accepted {formatDateTime(acceptance.acceptedAt)}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
                   <Money ngn={acceptance.valuation.totalPayableNgn} size="sm" />

@@ -10,8 +10,10 @@ import type {
   Lot,
   Offer,
   OfferAudience,
+  ParentLot,
   Participant,
   PriceRef,
+  PurchaseEntry,
   StatusChange,
   Valuation,
 } from "./types";
@@ -34,6 +36,101 @@ export function lotsFor(s: DemoState, ownerId: string): Lot[] {
 
 export function inventoryFor(s: DemoState, supplierId: string) {
   return eligibleInventory(s, supplierId);
+}
+
+/** Every purchase this supplier recorded, allocated to a lot or not. */
+export function purchasesFor(s: DemoState, supplierId: string): PurchaseEntry[] {
+  return s.purchases
+    .filter((p) => p.supplierId === supplierId)
+    .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+}
+
+/** The parcels locked into a lot — the reverse of `PurchaseEntry.lotId`. */
+export function purchasesForLot(s: DemoState, lotId: string): PurchaseEntry[] {
+  return s.purchases
+    .filter((p) => p.lotId === lotId)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
+}
+
+export function purchaseById(s: DemoState, id: string): PurchaseEntry | null {
+  return s.purchases.find((p) => p.id === id) ?? null;
+}
+
+/**
+ * Parcels this participant sold to someone else's shed. The mirror image of
+ * `purchasesFor`, so a registered miner sees its own side of the trade.
+ */
+export function salesToShedsFor(s: DemoState, minerId: string): PurchaseEntry[] {
+  return s.purchases
+    .filter((p) => p.sourceParticipantId === minerId)
+    .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+}
+
+/** Approved participants a shed may record a purchase against. */
+export function registeredSellers(s: DemoState, exceptId: string): Participant[] {
+  return s.participants
+    .filter((p) => p.role === "supplier" && p.status === "approved" && p.id !== exceptId)
+    .sort((a, b) => a.legalName.localeCompare(b.legalName));
+}
+
+export function inspectionsFor(s: DemoState, supplierId: string): Inspection[] {
+  const owned = new Set(lotsFor(s, supplierId).map((l) => l.id));
+  return s.inspections.filter((i) => owned.has(i.lotId));
+}
+
+export function parentLotsFor(s: DemoState, smelterId: string): ParentLot[] {
+  return s.parentLots
+    .filter((p) => p.smelterId === smelterId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+/** Offers on lots this participant owns — the sell side, not the buy side. */
+export function offersForOwner(s: DemoState, ownerId: string): Offer[] {
+  const owned = new Set(lotsFor(s, ownerId).map((l) => l.id));
+  return s.offers.filter((o) => owned.has(o.lotId)).sort((a, b) => b.opensAt.localeCompare(a.opensAt));
+}
+
+/** Acceptances of this participant's lots — who bought from them. */
+export function acceptancesOfOwner(s: DemoState, ownerId: string): Acceptance[] {
+  const owned = new Set(lotsFor(s, ownerId).map((l) => l.id));
+  return s.acceptances.filter((a) => owned.has(a.lotId)).sort((a, b) => b.acceptedAt.localeCompare(a.acceptedAt));
+}
+
+/**
+ * Everything the registry holds on one participant: what they did, what was
+ * done to them, and every record that names them. Backs the officer dossier.
+ */
+export type ParticipantDossier = {
+  participant: Participant;
+  purchases: PurchaseEntry[];
+  lots: Lot[];
+  inspections: Inspection[];
+  offers: Offer[];
+  soldTo: Acceptance[];
+  boughtLots: Acceptance[];
+  parentLots: ParentLot[];
+  certificates: Certificate[];
+  audit: AuditEvent[];
+};
+
+export function participantDossier(s: DemoState, id: string): ParticipantDossier | null {
+  const participant = participantById(s, id);
+  if (!participant) return null;
+  const audit = s.audit
+    .filter((e) => e.actorId === id || e.subjectId === id)
+    .sort((a, b) => b.at.localeCompare(a.at));
+  return {
+    participant,
+    purchases: purchasesFor(s, id),
+    lots: lotsFor(s, id),
+    inspections: inspectionsFor(s, id),
+    offers: offersForOwner(s, id),
+    soldTo: acceptancesOfOwner(s, id),
+    boughtLots: acceptancesFor(s, id),
+    parentLots: parentLotsFor(s, id),
+    certificates: certificatesFor(s, id),
+    audit,
+  };
 }
 
 export type PoolEntry = { offer: Offer; lot: Lot; supplier: Participant };
@@ -183,6 +280,80 @@ export function certificateFullView(s: DemoState, certNo: string): CertificateFu
     acceptance: c.acceptanceId ? s.acceptances.find((a) => a.id === c.acceptanceId) ?? null : null,
     history: c.history,
     audit: [...auditFor(s, lot.id), ...auditFor(s, c.certNo)].sort((a, b) => a.at.localeCompare(b.at)),
+  };
+}
+
+/**
+ * One royalty liability: what was assessed, who carries it, whether it falls due
+ * now or was transferred onward, and whether NM-EX has been paid.
+ */
+export type RoyaltyPosition = {
+  certNo: string;
+  cls: CertificateClass;
+  lotId: string;
+  /** Who owes it now. */
+  holderId: string;
+  holder: string;
+  /** Who the lot came from, so an officer can trace the liability back. */
+  supplierId: string;
+  supplier: string;
+  assessedNgn: number;
+  /** Zero on a DMO-A: the liability moved to the smelter rather than falling due. */
+  dueNowNgn: number;
+  transferred: boolean;
+  settled: boolean;
+  settledAt: string | null;
+  settlementRef: string | null;
+  certStatus: CertificateStatus;
+  issuedAt: string;
+};
+
+export function royaltyPositions(s: DemoState): RoyaltyPosition[] {
+  return s.certificates
+    .filter((c) => c.status !== "CANCELLED" && c.valuation.royaltyNgn > 0)
+    .map((c) => {
+      const holderId = c.valuation.royaltyLiabilityHolderId;
+      const settlement = c.royaltySettlement ?? null;
+      return {
+        certNo: c.certNo,
+        cls: c.cls,
+        lotId: c.lotId,
+        holderId,
+        holder: participantName(s, holderId),
+        supplierId: c.supplierId,
+        supplier: participantName(s, c.supplierId),
+        assessedNgn: c.valuation.royaltyNgn,
+        dueNowNgn: c.valuation.royaltyAtTransferNgn,
+        transferred: c.cls === "DMO-A",
+        settled: settlement != null,
+        settledAt: settlement?.at ?? null,
+        settlementRef: settlement?.reference ?? null,
+        certStatus: c.status,
+        issuedAt: c.issuedAt,
+      };
+    })
+    .sort((a, b) => b.issuedAt.localeCompare(a.issuedAt));
+}
+
+export type RoyaltyTotals = {
+  assessed: number;
+  settled: number;
+  outstanding: number;
+  /** Sitting with smelters because a DMO-A moved it there. */
+  heldBySmelters: number;
+  /** Falls due from an exporter before the clearance can be used. */
+  dueAtExport: number;
+};
+
+export function royaltyTotals(rows: RoyaltyPosition[]): RoyaltyTotals {
+  const assessed = rows.reduce((n, r) => n + r.assessedNgn, 0);
+  const settled = rows.filter((r) => r.settled).reduce((n, r) => n + r.assessedNgn, 0);
+  return {
+    assessed,
+    settled,
+    outstanding: assessed - settled,
+    heldBySmelters: rows.filter((r) => r.transferred && !r.settled).reduce((n, r) => n + r.assessedNgn, 0),
+    dueAtExport: rows.filter((r) => !r.transferred && !r.settled).reduce((n, r) => n + r.dueNowNgn, 0),
   };
 }
 

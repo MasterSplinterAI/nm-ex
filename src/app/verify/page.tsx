@@ -68,7 +68,7 @@ export default async function VerifyPage({ searchParams }: { searchParams: Promi
         >
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--ink-muted)]">{CERT_CLASS_LABEL[view.cls]}</p>
+              <p className="eyebrow">{CERT_CLASS_LABEL[view.cls]}</p>
               <p className="font-display mt-1 text-2xl tabular-nums text-[var(--ink)] sm:text-3xl">{view.certNo}</p>
               <p className="mt-1 text-sm text-[var(--ink-muted)]">
                 {view.title} — {view.subtitle}

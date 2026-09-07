@@ -134,7 +134,7 @@ export function TraceDesk({ prices }: Props) {
         <nav className="flex-1 overflow-y-auto overscroll-contain px-2 py-4" aria-label="Desk">
           {NAV_GROUPS.map((group) => (
             <div key={group.label} className="mb-5">
-              <p className="px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
+              <p className="px-2 eyebrow">
                 {group.label}
               </p>
               <ul className="mt-1.5 space-y-0.5">
@@ -189,7 +189,7 @@ export function TraceDesk({ prices }: Props) {
               </span>
             </button>
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
+              <p className="eyebrow">
                 {page.kicker}
               </p>
               <h1 className="truncate font-display text-lg tracking-tight text-[var(--ink)] sm:text-2xl">
@@ -282,7 +282,7 @@ function GuideTab({
       </section>
 
       <section>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
+        <p className="eyebrow">
           The chain
         </p>
         <ol className="mt-3 grid gap-px border border-[var(--line)] bg-[var(--line)] lg:grid-cols-5">
@@ -847,7 +847,7 @@ function RegistryTab({ prices }: { prices: TracePrices }) {
         <aside className="hidden space-y-5 lg:block">
           {ROLE_ORDER.map((role) => (
             <div key={role}>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
+              <p className="eyebrow">
                 {roleLabel(role)}s
               </p>
               <ul className="mt-2 divide-y divide-[var(--line)] border-y border-[var(--line)]">
@@ -922,7 +922,7 @@ function RegistryTab({ prices }: { prices: TracePrices }) {
             />
           </div>
 
-          <p className="mt-6 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
+          <p className="mt-6 eyebrow">
             Transactions
           </p>
           {rows.length === 0 ? (
@@ -1046,7 +1046,7 @@ function LotsTab({ prices }: { prices: TracePrices }) {
         </div>
 
         <aside className="hidden lg:block">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
+          <p className="eyebrow">
             Lots
           </p>
           <ul className="mt-2 divide-y divide-[var(--line)] border-y border-[var(--line)]">

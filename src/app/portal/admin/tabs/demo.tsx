@@ -41,7 +41,7 @@ export function DemoTab({ state, nowIso }: { state: DemoState; nowIso: string })
         <ActionForm action={resetScenarioAction} confirm="Reset the whole scenario? Everything created this session is discarded." className="mt-4">
           <ActionButton tone="danger" pendingText="Rebuilding…">Reset to seeded scenario</ActionButton>
         </ActionForm>
-        <p className="mt-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">Seeded {formatDateTime(state.seededAt)}</p>
+        <p className="mt-6 eyebrow">Seeded {formatDateTime(state.seededAt)}</p>
       </Panel>
     </div>
   );

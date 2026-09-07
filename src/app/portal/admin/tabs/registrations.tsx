@@ -15,10 +15,14 @@ function Application({ p, required }: { p: Participant; required: string[] }) {
     <article className="border border-[var(--line)] bg-white/70 p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">
+          <p className="eyebrow">
             {p.category ? CATEGORY_LABEL[p.category] : ROLE_LABEL[p.role]}
           </p>
-          <h3 className="font-display mt-1 text-xl text-[var(--ink)]">{p.legalName}</h3>
+          <h3 className="font-display mt-1 text-xl text-[var(--ink)]">
+            <a href={`/portal/admin?tab=registrations&entity=${encodeURIComponent(p.id)}`} className="hover:underline">
+              {p.legalName}
+            </a>
+          </h3>
           <p className="text-xs text-[var(--ink-muted)]">Applied {formatDateTime(p.createdAt)} · ref {p.id}</p>
         </div>
         <ParticipantStatusPill status={p.status} />
@@ -34,7 +38,7 @@ function Application({ p, required }: { p: Participant; required: string[] }) {
           ]}
         />
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">Compliance checklist</p>
+          <p className="eyebrow">Compliance checklist</p>
           <ul className="mt-2 space-y-1.5 text-sm">
             {required.map((doc, i) => {
               const file = p.documents[i];
@@ -85,7 +89,7 @@ export function RegistrationsTab({ state }: { state: DemoState }) {
 
       <Panel kicker="Register" title="Registered participants">
         <table className="w-full text-sm">
-          <thead className="text-left text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+          <thead className="table-head">
             <tr>
               <th className="pb-2 font-semibold">Registration no.</th>
               <th className="pb-2 font-semibold">Participant</th>
@@ -95,9 +99,16 @@ export function RegistrationsTab({ state }: { state: DemoState }) {
           </thead>
           <tbody className="divide-y divide-[var(--line)]">
             {decided.map((p) => (
-              <tr key={p.id}>
+              <tr key={p.id} className="hover:bg-[#1b4d38]/[0.04]">
                 <td className="py-2 tabular-nums">{p.regNo ?? "—"}</td>
-                <td className="py-2">{p.legalName}</td>
+                <td className="py-2">
+                  <a
+                    href={`/portal/admin?tab=registrations&entity=${encodeURIComponent(p.id)}`}
+                    className="font-semibold text-[#1f4b6b] hover:underline"
+                  >
+                    {p.legalName}
+                  </a>
+                </td>
                 <td className="py-2 text-[var(--ink-muted)]">{p.category ? CATEGORY_LABEL[p.category] : ROLE_LABEL[p.role]}</td>
                 <td className="py-2 text-right">
                   <div className="inline-flex items-center gap-2">

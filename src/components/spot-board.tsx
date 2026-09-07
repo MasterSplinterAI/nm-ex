@@ -176,7 +176,7 @@ export function SpotBoardSection({ board, policy }: Props) {
                         </div>
                       ) : (
                         <div className="px-1 pb-5 sm:px-3 sm:pb-8">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)]">
+                          <p className="eyebrow">
                             Last
                           </p>
                           <p className="mt-1 font-display text-3xl tracking-tight text-[var(--ink)] sm:text-4xl">

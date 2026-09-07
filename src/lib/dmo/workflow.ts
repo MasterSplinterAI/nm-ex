@@ -210,6 +210,8 @@ export function addPurchase(
     supplierId: string;
     date: string;
     source: string;
+    /** Set when buying from a registered miner rather than an unregistered one. */
+    sourceParticipantId?: string | null;
     kg: number;
     gradePct: number;
     valueNgn: number;
@@ -222,11 +224,28 @@ export function addPurchase(
   if (!(input.gradePct > 0 && input.gradePct <= 100)) {
     throw new WorkflowError("Grade must be between 0 and 100%.");
   }
+
+  // A registered seller is recorded by account, so the parcel appears on both
+  // sides of the trade. Anyone else is recorded by name only.
+  let sourceParticipantId: string | null = null;
+  let source = input.source.trim();
+  if (input.sourceParticipantId) {
+    if (input.sourceParticipantId === supplier.id) {
+      throw new WorkflowError("A purchase cannot be recorded against your own account.");
+    }
+    const seller = findParticipant(s, input.sourceParticipantId);
+    requireApproved(seller, "supplier");
+    sourceParticipantId = seller.id;
+    source = seller.legalName;
+  }
+  if (!source) source = "Unregistered supplier";
+
   const entry: PurchaseEntry = {
     id: purchaseId(s, yearOf(input.date || ctx.nowIso)),
     supplierId: supplier.id,
     date: input.date,
-    source: input.source.trim() || "Unregistered supplier",
+    source,
+    sourceParticipantId,
     kg: input.kg,
     gradePct: input.gradePct,
     valueNgn: input.valueNgn,
@@ -241,7 +260,7 @@ export function addPurchase(
     "purchase.added",
     "participant",
     supplier.id,
-    `${input.kg} kg @ ${input.gradePct}% Sn from ${entry.source}.`,
+    `${input.kg} kg @ ${input.gradePct}% Sn from ${entry.source}${sourceParticipantId ? " (registered)" : ""}.`,
   );
   return entry;
 }
@@ -820,6 +839,46 @@ export function setCertificateStatus(
     "certificate",
     cert.certNo,
     `${cert.certNo} → ${input.status}${input.note ? ` — ${input.note}` : ""}`,
+  );
+  return cert;
+}
+
+/**
+ * Record that the royalty assessed on a certificate has been received. Only an
+ * officer may do this; it is the answer to "has this liability been paid?".
+ */
+export function recordRoyaltySettlement(
+  s: DemoState,
+  ctx: Ctx,
+  input: { certNo: string; reference: string },
+): Certificate {
+  requireOfficer(s, ctx);
+  const cert = findCertificate(s, input.certNo);
+  if (cert.status === "CANCELLED") {
+    throw new WorkflowError("A cancelled certificate carries no royalty liability.");
+  }
+  if (cert.royaltySettlement) {
+    throw new WorkflowError(`Royalty on ${cert.certNo} was already settled on ${cert.royaltySettlement.at}.`);
+  }
+  const amountNgn = cert.valuation.royaltyNgn;
+  if (!(amountNgn > 0)) {
+    throw new WorkflowError(`${cert.certNo} assesses no royalty to settle.`);
+  }
+  cert.royaltySettlement = {
+    at: ctx.nowIso,
+    byId: ctx.actorId,
+    amountNgn,
+    reference: input.reference.trim(),
+  };
+  log(
+    s,
+    ctx,
+    "royalty.settled",
+    "certificate",
+    cert.certNo,
+    `Royalty ₦${amountNgn.toLocaleString("en-NG")} received against ${cert.certNo}${
+      input.reference.trim() ? ` — ref ${input.reference.trim()}` : ""
+    }.`,
   );
   return cert;
 }

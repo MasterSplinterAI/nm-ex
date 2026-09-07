@@ -30,8 +30,8 @@ export function InspectionsTab({ state, board, nowIso }: { state: DemoState; boa
             <article key={inspection.id} className="border border-[var(--line)] bg-white/70 p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-muted)]">{supplier.legalName} · {supplier.regNo}</p>
-                  <h3 className="font-display mt-1 text-xl tabular-nums">{lot.id}</h3>
+                  <p className="eyebrow">{supplier.legalName} · {supplier.regNo}</p>
+                  <h3 className="font-display mt-1 text-xl tabular-nums"><a href={`/portal/admin?lot=${encodeURIComponent(lot.id)}`} className="hover:underline">{lot.id}</a></h3>
                   <p className="text-sm text-[var(--ink-muted)]">
                     {formatKg(inspection.submittedKg)} declared {formatPct(lot.declaredGradePct, 2)} Sn · {lot.purchaseIds.length} ledger entries · {inspection.warehouse}
                   </p>
