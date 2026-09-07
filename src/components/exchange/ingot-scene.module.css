@@ -10,40 +10,26 @@
 
 .photo {
   object-fit: cover;
-  /* The stack sits mid-frame in the source; hold it there as the container
-     narrows rather than cropping the near face away. */
-  object-position: 48% 52%;
+  /* Hold the mining ponds and the low sun in frame as the column narrows. */
+  object-position: 42% 55%;
   /* Slow push-in. The scene should feel alive without ever calling attention
      to the motion itself, so the travel stays under a few percent. */
-  animation: drift 34s ease-in-out infinite alternate;
+  animation: drift 38s ease-in-out infinite alternate;
   transform-origin: center;
 }
 
-/* A single specular pass across the cast faces, as if a gantry light moved by. */
-.sheen {
-  position: absolute;
-  inset: -30% -60%;
-  background: linear-gradient(
-    104deg,
-    transparent 38%,
-    rgb(255 255 255 / 0.1) 47%,
-    rgb(255 255 255 / 0.22) 50%,
-    rgb(255 255 255 / 0.1) 53%,
-    transparent 62%
-  );
-  animation: sweep 11s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  pointer-events: none;
-  mix-blend-mode: screen;
-}
-
-/* Ties the photograph into the dark hero rather than sitting on top of it. */
+/*
+ * The hero copy sits beside the photograph, not over it, so this only has to
+ * feather the edges into the near-black page and seat the caption. Kept light
+ * enough that the golden hour still reads as golden hour.
+ */
 .veil {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgb(9 14 12 / 0.85) 0%, rgb(9 14 12 / 0.25) 38%, transparent 70%),
-    linear-gradient(0deg, rgb(9 14 12 / 0.9) 0%, transparent 45%),
-    radial-gradient(ellipse at 62% 45%, rgb(31 107 79 / 0.18), transparent 62%);
+    linear-gradient(90deg, rgb(9 14 12 / 0.7) 0%, rgb(9 14 12 / 0.18) 22%, transparent 45%),
+    linear-gradient(0deg, rgb(9 14 12 / 0.8) 0%, rgb(9 14 12 / 0.1) 30%, transparent 48%),
+    linear-gradient(180deg, rgb(9 14 12 / 0.3) 0%, transparent 22%);
   pointer-events: none;
 }
 
@@ -56,14 +42,14 @@
   gap: 0.5rem;
   border-radius: 999px;
   border: 1px solid rgb(255 255 255 / 0.16);
-  background: rgb(9 14 12 / 0.6);
+  background: rgb(9 14 12 / 0.62);
   backdrop-filter: blur(6px);
   padding: 0.35rem 0.7rem;
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgb(255 255 255 / 0.78);
+  color: rgb(255 255 255 / 0.8);
 }
 
 .pulse {
@@ -80,25 +66,7 @@
     transform: scale(1.01) translate3d(0, 0, 0);
   }
   to {
-    transform: scale(1.06) translate3d(-1%, -0.6%, 0);
-  }
-}
-
-@keyframes sweep {
-  0% {
-    transform: translateX(-42%);
-    opacity: 0;
-  }
-  12% {
-    opacity: 1;
-  }
-  55% {
-    opacity: 1;
-  }
-  70%,
-  100% {
-    transform: translateX(42%);
-    opacity: 0;
+    transform: scale(1.07) translate3d(-1.2%, -0.8%, 0);
   }
 }
 
@@ -114,11 +82,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .photo,
-  .sheen,
   .pulse {
     animation: none;
-  }
-  .sheen {
-    opacity: 0;
   }
 }
