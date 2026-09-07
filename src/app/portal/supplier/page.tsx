@@ -148,11 +148,10 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
                   sellers={sellers}
                   vocab={vocab}
                   today={nowIso.slice(0, 10)}
-                  guidePerKgNgn={
-                    mine
-                      ? `Selling direct you take the full ${state.policy.coefToSmelter * 100}% smelter coefficient — no shed margin in between.`
-                      : `Guide today: ~${formatNgn((lme * board.fx.rate * state.policy.coefMinerToAggregator) / 1000)} per kg of contained tin (LME × FX × ${state.policy.coefMinerToAggregator}).`
-                  }
+                  lmeUsd={lme}
+                  fxRate={board.fx.rate}
+                  coefficient={mine ? state.policy.coefToSmelter : state.policy.coefMinerToAggregator}
+                  isMine={mine}
                 />
               }
             >

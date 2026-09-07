@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ActionButton, ActionForm } from "@/components/portal/action-button";
 import { inputClass, labelClass } from "@/components/portal/form-styles";
+import { formatKg, formatNgnPrecise, formatUsd } from "@/lib/format";
 import type { SupplierVocab } from "@/lib/dmo/supplier-vocab";
 import { addPurchaseAction } from "./actions";
 
@@ -19,17 +20,36 @@ export function AddPurchase({
   sellers,
   vocab,
   today,
-  guidePerKgNgn,
+  lmeUsd,
+  fxRate,
+  coefficient,
+  isMine,
 }: {
   sellers: Seller[];
   vocab: SupplierVocab;
   today: string;
-  guidePerKgNgn: string;
+  lmeUsd: number;
+  fxRate: number;
+  /** Share of the metal value the seller is guaranteed. */
+  coefficient: number;
+  isMine: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [sellerId, setSellerId] = useState(sellers[0]?.id ?? UNREGISTERED);
+  const [kg, setKg] = useState("50");
+  const [gradePct, setGradePct] = useState("72");
+  /** Null until the shed types over the board figure. */
+  const [override, setOverride] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const unregistered = sellerId === UNREGISTERED;
+
+  // What the seller is owed at today's board: contained tin × LME × FX × coefficient.
+  // Derived rather than stored, so weight and grade carry it without a sync step.
+  const containedKg = (Number(kg) || 0) * ((Number(gradePct) || 0) / 100);
+  const floorNgn = Math.round((containedKg * lmeUsd * fxRate * coefficient) / 1000);
+  const amount = override ?? (floorNgn > 0 ? String(floorNgn) : "");
+  const entered = Number(amount) || 0;
+  const shortfall = floorNgn > 0 && entered > 0 && entered < floorNgn ? floorNgn - entered : 0;
 
   useEffect(() => {
     if (!open) return;
@@ -123,7 +143,16 @@ export function AddPurchase({
                 <div className="grid grid-cols-2 gap-3">
                   <label className="block">
                     <span className={labelClass}>Weight (kg)</span>
-                    <input name="kg" type="number" step="0.1" min="0.1" className={`${inputClass} mt-1`} defaultValue={50} required />
+                    <input
+                      name="kg"
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      className={`${inputClass} mt-1`}
+                      value={kg}
+                      onChange={(e) => setKg(e.target.value)}
+                      required
+                    />
                   </label>
                   <label className="block">
                     <span className={labelClass}>Grade (% Sn)</span>
@@ -134,16 +163,55 @@ export function AddPurchase({
                       min="0.01"
                       max="100"
                       className={`${inputClass} mt-1`}
-                      defaultValue={72}
+                      value={gradePct}
+                      onChange={(e) => setGradePct(e.target.value)}
                       required
                     />
                   </label>
                 </div>
 
+                <div className="rounded-lg border border-[var(--line-strong)] bg-[#f4f7f5] p-3">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className={labelClass}>Contained tin</span>
+                    <span className="text-sm font-semibold tabular-nums">{formatKg(containedKg)}</span>
+                  </div>
+                  <p className="formula mt-0.5">
+                    = {kg || 0} kg × {gradePct || 0}%
+                  </p>
+                </div>
+
                 <label className="block">
                   <span className={labelClass}>{vocab.costLabel}</span>
-                  <input name="valueNgn" type="number" step="1" min="0" className={`${inputClass} mt-1`} defaultValue={2_175_000} />
-                  <span className="mt-1 block text-xs text-[var(--ink-muted)]">{guidePerKgNgn}</span>
+                  <input
+                    name="valueNgn"
+                    type="number"
+                    step="1"
+                    min="0"
+                    className={`${inputClass} mt-1`}
+                    value={amount}
+                    onChange={(e) => setOverride(e.target.value)}
+                  />
+                  <p className="formula mt-1">
+                    {isMine ? "At the board" : "NM-EX floor"} = {formatKg(containedKg)} × {formatUsd(lmeUsd)} × ₦
+                    {fxRate.toLocaleString("en-NG")} × {coefficient * 100}% = <b>{formatNgnPrecise(floorNgn)}</b>
+                  </p>
+                  {override != null && (
+                    <button
+                      type="button"
+                      onClick={() => setOverride(null)}
+                      className="mt-1 text-xs font-semibold text-[var(--forest)] hover:underline"
+                    >
+                      Reset to the board figure
+                    </button>
+                  )}
+                  {shortfall > 0 && (
+                    <p className="note note-warn mt-2">
+                      {formatNgnPrecise(shortfall)} below the guaranteed floor.{" "}
+                      {unregistered
+                        ? "This seller is unregistered, so the floor is not enforceable — but the shortfall is recorded."
+                        : "A registered seller is guaranteed this coefficient."}
+                    </p>
+                  )}
                 </label>
 
                 <label className="block">
