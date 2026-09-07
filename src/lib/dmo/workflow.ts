@@ -266,8 +266,12 @@ export function addPurchase(
 }
 
 export type Inventory = {
+  /** Gross material on hand — what the pile weighs. */
   tier1Kg: number;
   tier2Kg: number;
+  /** Contained tin in that material. This is what the MML is measured against. */
+  tier1SnKg: number;
+  tier2SnKg: number;
   entries: PurchaseEntry[];
 };
 
@@ -277,17 +281,30 @@ export function eligibleInventory(s: DemoState, supplierId: string): Inventory {
   );
   let tier1Kg = 0;
   let tier2Kg = 0;
+  let tier1SnKg = 0;
+  let tier2SnKg = 0;
   for (const e of entries) {
-    if (tierForGrade(e.gradePct, s.policy) === 1) tier1Kg += e.kg;
-    else tier2Kg += e.kg;
+    const containedKg = e.kg * (e.gradePct / 100);
+    if (tierForGrade(e.gradePct, s.policy) === 1) {
+      tier1Kg += e.kg;
+      tier1SnKg += containedKg;
+    } else {
+      tier2Kg += e.kg;
+      tier2SnKg += containedKg;
+    }
   }
-  return { tier1Kg, tier2Kg, entries };
+  return { tier1Kg, tier2Kg, tier1SnKg, tier2SnKg, entries };
 }
 
+/**
+ * The minimum marketable lot is a quantity of *metal*, not of material. A tonne
+ * of 20% ore is not the same lot as a tonne of 72% concentrate, so the gate
+ * measures contained tin.
+ */
 export function canSubmitLot(s: DemoState, supplierId: string, tier: 1 | 2): boolean {
   const inv = eligibleInventory(s, supplierId);
-  const kg = tier === 1 ? inv.tier1Kg : inv.tier2Kg;
-  return kg >= mmlKgForTier(tier, s.policy);
+  const snKg = tier === 1 ? inv.tier1SnKg : inv.tier2SnKg;
+  return snKg >= mmlKgForTier(tier, s.policy);
 }
 
 export function submitForInspection(
@@ -299,17 +316,16 @@ export function submitForInspection(
   requireApproved(supplier, "supplier");
   const inv = eligibleInventory(s, supplier.id);
   const eligibleKg = input.tier === 1 ? inv.tier1Kg : inv.tier2Kg;
+  const eligibleSnKg = input.tier === 1 ? inv.tier1SnKg : inv.tier2SnKg;
+  // The MML is a quantity of contained tin, not of gross material.
   const mml = mmlKgForTier(input.tier, s.policy);
-  if (eligibleKg < mml) {
+  if (eligibleSnKg < mml) {
     throw new WorkflowError(
-      `Eligible inventory (${eligibleKg} kg) is below the ${mml} kg minimum marketable lot.`,
+      `Eligible inventory holds ${round2(eligibleSnKg)} kg of contained tin, below the ${mml} kg minimum marketable lot.`,
     );
   }
   if (input.kg > eligibleKg) {
-    throw new WorkflowError(`Only ${eligibleKg} kg is eligible in this tier.`);
-  }
-  if (input.kg < mml) {
-    throw new WorkflowError(`A lot must be at least ${mml} kg.`);
+    throw new WorkflowError(`Only ${eligibleKg} kg of material is eligible in this tier.`);
   }
 
   const candidates = inv.entries
@@ -321,6 +337,12 @@ export function submitForInspection(
     if (sum >= input.kg) break;
     taken.push(e);
     sum += e.kg;
+  }
+  const takenSnKg = taken.reduce((acc, e) => acc + e.kg * (e.gradePct / 100), 0);
+  if (takenSnKg < mml) {
+    throw new WorkflowError(
+      `Those parcels hold ${round2(takenSnKg)} kg of contained tin; a lot must hold at least ${mml} kg.`,
+    );
   }
   const weightedGrade =
     taken.reduce((acc, e) => acc + e.kg * e.gradePct, 0) / Math.max(sum, 1);

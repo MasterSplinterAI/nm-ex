@@ -10,7 +10,8 @@ import { submitLotAction } from "./actions";
 export function SupplierConsolidate({ state, me }: { state: DemoState; me: Participant }) {
   const inv = inventoryFor(state, me.id);
   const mml1 = mmlKgForTier(1, state.policy);
-  const ready = inv.tier1Kg >= mml1;
+  // Eligibility is measured in contained tin, not in the weight of the pile.
+  const ready = inv.tier1SnKg >= mml1;
   const entries = inv.entries.filter((e) => e.gradePct > state.policy.tier1MinGradePct);
   const avg =
     entries.reduce((n, e) => n + e.kg * e.gradePct, 0) / Math.max(entries.reduce((n, e) => n + e.kg, 0), 1);
@@ -66,12 +67,18 @@ export function SupplierConsolidate({ state, me }: { state: DemoState; me: Parti
                 <dd className="tabular-nums font-semibold">{entries.length ? formatPct(avg, 1) : "—"}</dd>
               </div>
               <div className="flex justify-between gap-3">
+                <dt className="text-[var(--ink-muted)]">Contained tin</dt>
+                <dd className="tabular-nums font-semibold">
+                  {formatKg(inv.tier1SnKg)} <span className="text-xs font-normal text-[var(--ink-soft)]">/ {formatKg(mml1)} MML</span>
+                </dd>
+              </div>
+              <div className="flex justify-between gap-3">
                 <dt className="text-[var(--ink-muted)]">Commodity</dt>
                 <dd>Tin (Sn) concentrate</dd>
               </div>
             </dl>
             <p className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${ready ? "bg-[#1b4d38]/10 text-[#1b4d38]" : "bg-[var(--paper)] text-[var(--ink-muted)]"}`}>
-              {ready ? "Eligible for DMO" : `${formatKg(mml1 - inv.tier1Kg)} short of MML`}
+              {ready ? "Eligible for DMO" : `${formatKg(mml1 - inv.tier1SnKg)} short of the MML`}
             </p>
           </section>
           <section className="portal-card p-5">
@@ -131,7 +138,7 @@ export function SupplierConsolidate({ state, me }: { state: DemoState; me: Parti
             Cancel
           </a>
           <ActionButton disabled={!ready} pendingText="Submitting…">
-            {ready ? "Continue — submit lot" : `${formatKg(mml1 - inv.tier1Kg)} more to reach MML`}
+            {ready ? "Continue — submit lot" : `${formatKg(mml1 - inv.tier1SnKg)} more contained Sn`}
           </ActionButton>
         </div>
       </ActionForm>

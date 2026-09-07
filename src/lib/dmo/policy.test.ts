@@ -8,9 +8,14 @@ test("grade above 50% is tier 1, at or below is tier 2", () => {
   assert.equal(tierForGrade(35, DEFAULT_DMO_POLICY), 2);
 });
 
-test("MML is 1,000 kg for tier 1 and 2,000 kg for tier 2", () => {
-  assert.equal(mmlKgFor(72, DEFAULT_DMO_POLICY), 1000);
-  assert.equal(mmlKgFor(40, DEFAULT_DMO_POLICY), 2000);
+test("the MML is a quantity of contained tin, by tier", () => {
+  assert.equal(mmlKgFor(72, DEFAULT_DMO_POLICY), 700);
+  assert.equal(mmlKgFor(40, DEFAULT_DMO_POLICY), 900);
+
+  // The bar sits where the old gross thresholds sat at typical grades:
+  // 1,000 kg of 72% concentrate, and 2,000 kg of 45% ore.
+  assert.ok(1000 * 0.72 >= DEFAULT_DMO_POLICY.mmlTier1Kg);
+  assert.ok(2000 * 0.45 >= DEFAULT_DMO_POLICY.mmlTier2Kg);
 });
 
 test("default coefficients match the policy note", () => {

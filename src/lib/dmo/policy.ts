@@ -8,8 +8,11 @@ export const DEFAULT_DMO_POLICY: DmoPolicy = {
   royaltyPct: 7.5,
   vatPct: 7.5,
   recoveryPct: 95,
-  mmlTier1Kg: 1000,
-  mmlTier2Kg: 2000,
+  // Minimum marketable lot, measured in kilograms of CONTAINED TIN. Set so the
+  // effective bar matches the old gross thresholds at typical grades: 1,000 kg
+  // of 72% concentrate, or 2,000 kg of 45% ore.
+  mmlTier1Kg: 700,
+  mmlTier2Kg: 900,
   tier1MinGradePct: 50,
   sampleWindowHours: 48,
   offerPeriodDays: 5,

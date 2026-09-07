@@ -11,9 +11,11 @@ export function SupplierHome({ state, me, nowIso }: { state: DemoState; me: Part
   const entries = [...inv.entries].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
   const recent = [...entries].reverse().slice(0, 7);
   const kg = inv.tier1Kg;
+  // The MML gate is contained tin, so that is what the meters track.
+  const snKg = inv.tier1SnKg;
   const mml = mmlKgForTier(1, state.policy);
   const avg = weightedGrade(entries);
-  const ready = kg >= mml;
+  const ready = snKg >= mml;
   const bySource = rollup(entries);
 
   return (
@@ -21,7 +23,7 @@ export function SupplierHome({ state, me, nowIso }: { state: DemoState; me: Part
       <WelcomeBanner name={me.legalName} nowIso={nowIso} />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiTile icon="weight" label="Total weight (current MML)" value={formatKg(kg)} />
+        <KpiTile icon="weight" label="Contained tin on hand" value={formatKg(snKg)} hint={`In ${formatKg(kg)} of material.`} />
         <KpiTile icon="beaker" label="Average purity (Sn)" value={entries.length ? formatPct(avg, 1) : "—"} />
         <KpiTile icon="list" label="Purchase records" value={entries.length} />
         <StatusTile
@@ -29,7 +31,7 @@ export function SupplierHome({ state, me, nowIso }: { state: DemoState; me: Part
           label="DMO eligibility"
           ok={ready}
           okText="Eligible for DMO — meets MML threshold"
-          waitText={`${formatKg(mml - kg)} more to reach the ${formatKg(mml)} MML`}
+          waitText={`${formatKg(mml - snKg)} more contained Sn to reach the ${formatKg(mml)} MML`}
         />
       </div>
 
@@ -96,7 +98,13 @@ export function SupplierHome({ state, me, nowIso }: { state: DemoState; me: Part
         <section className="portal-card flex flex-col p-5">
           <h2 className="font-display text-lg">MML compliance</h2>
           <dl className="mt-4 space-y-4 text-sm">
-            <Meter label="Minimum lot weight" target={`${formatKg(mml)}`} actual={formatKg(kg)} met={ready} pct={Math.min(100, (kg / mml) * 100)} />
+            <Meter
+              label="Minimum contained tin"
+              target={`${formatKg(mml)}`}
+              actual={formatKg(snKg)}
+              met={ready}
+              pct={Math.min(100, (snKg / mml) * 100)}
+            />
             <Meter
               label="Minimum average purity (Sn)"
               target={`${formatPct(state.policy.tier1MinGradePct, 0)}`}
@@ -108,7 +116,7 @@ export function SupplierHome({ state, me, nowIso }: { state: DemoState; me: Part
           <div className={`mt-5 rounded-xl border px-3 py-3 text-sm ${ready ? "border-[#1b4d38]/30 bg-[#1b4d38]/8 text-[#1b4d38]" : "border-[var(--line)] bg-[var(--paper)] text-[var(--ink-muted)]"}`}>
             {ready
               ? "This inventory meets the minimum marketable lot. Choose a warehouse and submit for official assay."
-              : `Add ${formatKg(mml - kg)} more eligible concentrate to unlock lot consolidation.`}
+              : `Add ${formatKg(mml - snKg)} more contained tin to unlock lot consolidation.`}
           </div>
           <a
             href="/portal/supplier?tab=consolidate"

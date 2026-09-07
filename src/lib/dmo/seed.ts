@@ -318,9 +318,11 @@ export function buildSeed(board: SpotBoard, nowIso: string): DemoState {
       date: dateOnly(at(daysAgo)),
       source: registered ? "" : sources[i % sources.length],
       sourceParticipantId: registered ? SEED_IDS.bako : null,
-      kg: i === 18 ? 80 : 50,
+      // 950 kg at 72% is 684 kg of contained tin — just short of the 700 kg MML,
+      // so one more parcel unlocks consolidation during the walkthrough.
+      kg: 50,
       gradePct: 72,
-      valueNgn: (i === 18 ? 80 : 50) * 43_500,
+      valueNgn: 50 * 43_500,
       reference: `RCPT-L${String(i + 1).padStart(2, "0")}`,
     });
   }

@@ -104,16 +104,23 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
               <div className="grid gap-4 sm:grid-cols-2">
                 {([1, 2] as const).map((tier) => {
                   const kg = tier === 1 ? inv.tier1Kg : inv.tier2Kg;
+                  const snKg = tier === 1 ? inv.tier1SnKg : inv.tier2SnKg;
                   const mml = tier === 1 ? mml1 : mml2;
-                  const pct = Math.min(100, (kg / mml) * 100);
-                  const ready = kg >= mml;
+                  const pct = Math.min(100, (snKg / mml) * 100);
+                  const ready = snKg >= mml;
+                  const avgGrade = kg > 0 ? (snKg / kg) * 100 : 0;
                   return (
                     <div key={tier} className="portal-card p-4">
                       <p className="eyebrow">
                         Tier {tier} · {tier === 1 ? `above ${state.policy.tier1MinGradePct}% Sn` : `${state.policy.tier1MinGradePct}% Sn and below`}
                       </p>
                       <p className="font-display mt-1 text-3xl tabular-nums">
-                        {formatKg(kg)} <span className="text-base text-[var(--ink-muted)]">/ {formatKg(mml)}</span>
+                        {formatKg(snKg)} <span className="text-base text-[var(--ink-muted)]">/ {formatKg(mml)} Sn</span>
+                      </p>
+                      <p className="text-xs text-[var(--ink-soft)]">
+                        {kg > 0
+                          ? `from ${formatKg(kg)} of material at ${formatPct(avgGrade, 1)} average`
+                          : "no material on hand"}
                       </p>
                       <div className="mt-3 h-2 w-full bg-[var(--ink)]/10">
                         <div className={`h-2 ${ready ? "bg-[var(--forest)]" : "bg-[var(--copper)]"}`} style={{ width: `${pct}%` }} />
@@ -127,11 +134,11 @@ export default async function SupplierPage({ searchParams }: { searchParams: Pro
                         }`}
                         aria-disabled={!ready}
                       >
-                        {ready ? `Consolidate ${formatKg(kg)} — choose warehouse` : `${formatKg(mml - kg)} more to reach MML`}
+                        {ready ? `Consolidate ${formatKg(kg)} — choose warehouse` : `${formatKg(mml - snKg)} more contained Sn`}
                       </a>
                       {kg > 0 && (
                         <p className="mt-2 text-xs text-[var(--ink-muted)]">
-                          Indicative reference at today&apos;s board: {formatNgn(referenceValueNgn(kg / 1000, tier === 1 ? 72 : 45, lme, board.fx.rate))} (assumes {tier === 1 ? 72 : 45}% Sn until assayed)
+                          Indicative reference at today&apos;s board: {formatNgn(referenceValueNgn(kg / 1000, avgGrade, lme, board.fx.rate))}
                         </p>
                       )}
                     </div>

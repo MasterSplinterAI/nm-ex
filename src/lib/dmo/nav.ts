@@ -57,7 +57,7 @@ export function navCounts(state: DemoState, participantId: string, role: Role): 
     const activeLots = lots.filter(
       (l) => !["utilized", "sold_domestic", "smelted", "aggregated", "collected"].includes(l.status),
     ).length;
-    const ready = inv.tier1Kg >= state.policy.mmlTier1Kg || inv.tier2Kg >= state.policy.mmlTier2Kg;
+    const ready = inv.tier1SnKg >= state.policy.mmlTier1Kg || inv.tier2SnKg >= state.policy.mmlTier2Kg;
     const listed = lots.filter((l) => state.offers.some((o) => o.lotId === l.id)).length;
     return {
       ledger: inv.entries.length,

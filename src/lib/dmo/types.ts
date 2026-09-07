@@ -243,6 +243,7 @@ export type DmoPolicy = {
   royaltyPct: number;
   vatPct: number;
   recoveryPct: number;
+  /** Minimum marketable lot, in kilograms of contained tin — not gross material. */
   mmlTier1Kg: number;
   mmlTier2Kg: number;
   tier1MinGradePct: number;

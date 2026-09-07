@@ -5,6 +5,7 @@ import {
   addPurchase,
   canSubmitLot,
   createParentLot,
+  eligibleInventory,
   emptyState,
   expireOffer,
   markSampleReceived,
@@ -81,17 +82,41 @@ test("registration starts pending and approval assigns a registration number", (
   assert.ok(s.audit.some((e) => e.action === "registration.approved"));
 });
 
-test("MML trigger: 980 kg cannot submit, 1,030 kg can", () => {
+test("the MML gate counts contained tin, not the weight of the pile", () => {
   const s = emptyState(NOW);
   const sup = approvedSupplier(s);
   const ctx = { ...officer, actorId: sup.id };
+
+  // 950 kg at 72% is 684 kg of tin — under the 700 kg MML despite the tonnage.
   for (let i = 0; i < 19; i++) {
-    addPurchase(s, ctx, { supplierId: sup.id, date: "2026-08-20", source: "Miner", kg: i < 18 ? 50 : 80, gradePct: 72, valueNgn: 1, reference: "" });
+    addPurchase(s, ctx, { supplierId: sup.id, date: "2026-08-20", source: "Miner", kg: 50, gradePct: 72, valueNgn: 1, reference: "" });
   }
+  const short = eligibleInventory(s, sup.id);
+  assert.equal(short.tier1Kg, 950);
+  assert.ok(Math.abs(short.tier1SnKg - 684) < 0.01);
   assert.equal(canSubmitLot(s, sup.id, 1), false);
+
   addPurchase(s, ctx, { supplierId: sup.id, date: "2026-08-21", source: "Miner", kg: 50, gradePct: 72, valueNgn: 1, reference: "" });
   assert.equal(canSubmitLot(s, sup.id, 1), true);
   assert.throws(() => submitForInspection(s, ctx, { supplierId: sup.id, tier: 1, kg: 5000 }), WorkflowError);
+});
+
+test("a heavier pile of poorer ore does not clear the MML", () => {
+  const s = emptyState(NOW);
+  const sup = approvedSupplier(s);
+  const ctx = { ...officer, actorId: sup.id };
+
+  // Two tonnes, but only 20% tin — 400 kg contained, well under either MML.
+  addPurchase(s, ctx, { supplierId: sup.id, date: "2026-08-20", source: "Miner", kg: 2_000, gradePct: 20, valueNgn: 1, reference: "" });
+  const inv = eligibleInventory(s, sup.id);
+  assert.equal(inv.tier2Kg, 2_000, "it is tier 2 by grade");
+  assert.equal(inv.tier2SnKg, 400);
+  assert.equal(canSubmitLot(s, sup.id, 2), false);
+  assert.throws(() => submitForInspection(s, ctx, { supplierId: sup.id, tier: 2, kg: 2_000 }), WorkflowError);
+
+  // Richer ore clears it on far less material.
+  addPurchase(s, ctx, { supplierId: sup.id, date: "2026-08-21", source: "Miner", kg: 1_100, gradePct: 50, valueNgn: 1, reference: "" });
+  assert.equal(canSubmitLot(s, sup.id, 2), true);
 });
 
 test("verification locks assay, snapshots price and opens a 5-day offer to smelters", () => {

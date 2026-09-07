@@ -14,8 +14,13 @@ test("seed contains the scripted scenario", () => {
   assert.equal(s.participants.find((p) => p.id === SEED_IDS.solder)!.regNo, "NMEX-BUY-2026-00102");
   assert.equal(s.participants.find((p) => p.id === SEED_IDS.wamba)!.status, "pending");
 
+  // 950 kg at 72% is 684 kg of contained tin, just under the 700 kg MML, so the
+  // walkthrough can unlock consolidation with one more parcel.
   const free = s.purchases.filter((p) => p.supplierId === SEED_IDS.solex && p.lotId === null);
-  assert.equal(free.reduce((a, p) => a + p.kg, 0), 980);
+  assert.equal(free.reduce((a, p) => a + p.kg, 0), 950);
+  const freeSnKg = free.reduce((a, p) => a + p.kg * (p.gradePct / 100), 0);
+  assert.ok(freeSnKg < s.policy.mmlTier1Kg, `${freeSnKg} kg Sn should be under the MML`);
+  assert.ok(freeSnKg + 50 * 0.72 >= s.policy.mmlTier1Kg, "one more 50 kg parcel should clear it");
 
   const mine = s.participants.find((p) => p.id === SEED_IDS.ropp)!;
   assert.equal(mine.category, "mining_company");

@@ -30,8 +30,8 @@ export function PolicyTab({ state }: { state: DemoState }) {
           <Field name="royaltyPct" label="Royalty %" value={p.royaltyPct} step="0.1" help="On full contained-metal reference value." />
           <Field name="vatPct" label="VAT %" value={p.vatPct} step="0.1" help="On domestic purchase value; export zero-rated." />
           <Field name="recoveryPct" label="Expected smelter recovery %" value={p.recoveryPct} step="0.1" />
-          <Field name="mmlTier1Kg" label="MML tier 1 (kg)" value={p.mmlTier1Kg} step="1" help={`Grade above ${p.tier1MinGradePct}% Sn.`} />
-          <Field name="mmlTier2Kg" label="MML tier 2 (kg)" value={p.mmlTier2Kg} step="1" help={`Grade ${p.tier1MinGradePct}% Sn and below.`} />
+          <Field name="mmlTier1Kg" label="MML tier 1 (kg contained Sn)" value={p.mmlTier1Kg} step="1" help={`Grade above ${p.tier1MinGradePct}% Sn. Measured as contained tin, not gross weight.`} />
+          <Field name="mmlTier2Kg" label="MML tier 2 (kg contained Sn)" value={p.mmlTier2Kg} step="1" help={`Grade ${p.tier1MinGradePct}% Sn and below. Measured as contained tin.`} />
           <Field name="tier1MinGradePct" label="Tier 1 grade threshold %" value={p.tier1MinGradePct} step="0.1" />
           <Field name="sampleWindowHours" label="Sample window (hours)" value={p.sampleWindowHours} step="1" />
           <Field name="offerPeriodDays" label="Domestic offer period (days)" value={p.offerPeriodDays} step="1" />
