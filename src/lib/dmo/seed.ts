@@ -285,17 +285,18 @@ export function buildSeed(board: SpotBoard, nowIso: string): DemoState {
   const offerEC = s.offers.find((o) => o.lotId === lotEC.id)!;
   expireOffer(s, ctx("system", offerEC.closesAt), { offerId: offerEC.id });
 
-  // 7. Three 1 MT child lots accepted, paid, collected → DMO-A 00029–00031.
+  // 7. Three small child lots accepted, paid, collected → DMO-A 00029–00031.
+  // 1,400 kg carries just over a tonne of tin even at the lowest of these grades.
   for (const grade of [72, 75, 78]) {
-    const child = seedLot(1_000, grade, 1, 10);
+    const child = seedLot(1_400, grade, 1, 10);
     acceptPayCollect(child.id, 9);
   }
 
   // 8. 25 MT verified, offer open to smelters — the live acceptance moment.
   seedLot(25_000, 78, 25, 2);
 
-  // 9. 1,200 kg submitted, awaiting sample (48 h window running).
-  for (let i = 0; i < 12; i++) {
+  // 9. 1,500 kg submitted — 1,080 kg of tin — awaiting sample (48 h window).
+  for (let i = 0; i < 15; i++) {
     addPurchase(s, ctx(solex, at(3, i)), {
       supplierId: solex,
       date: dateOnly(at(3)),
@@ -306,11 +307,12 @@ export function buildSeed(board: SpotBoard, nowIso: string): DemoState {
       reference: `RCPT-K${String(i + 1).padStart(2, "0")}`,
     });
   }
-  submitForInspection(s, ctx(solex, at(1, 1)), { supplierId: solex, tier: 1, kg: 1_200 });
+  submitForInspection(s, ctx(solex, at(1, 1)), { supplierId: solex, tier: 1, kg: 1_500 });
 
-  // 10. Ledger at 980 kg — the MML button is disabled until one more purchase.
+  // 10. Ledger just under a tonne of contained tin — the MML button stays
+  // disabled until one more purchase.
   const sources = ["Rayfield cooperative", "Barkin Ladi diggings", "Bukuru washing site", "Kuru artisanal miners"];
-  for (let i = 0; i < 19; i++) {
+  for (let i = 0; i < 27; i++) {
     const daysAgo = 5 - Math.floor(i / 4);
     const registered = i % 4 === 0;
     addPurchase(s, ctx(solex, at(daysAgo, 9 + (i % 4))), {
@@ -318,8 +320,8 @@ export function buildSeed(board: SpotBoard, nowIso: string): DemoState {
       date: dateOnly(at(daysAgo)),
       source: registered ? "" : sources[i % sources.length],
       sourceParticipantId: registered ? SEED_IDS.bako : null,
-      // 950 kg at 72% is 684 kg of contained tin — just short of the 700 kg MML,
-      // so one more parcel unlocks consolidation during the walkthrough.
+      // 1,350 kg at 72% is 972 kg of contained tin — just short of the one-tonne
+      // MML, so one more parcel unlocks consolidation during the walkthrough.
       kg: 50,
       gradePct: 72,
       valueNgn: 50 * 43_500,

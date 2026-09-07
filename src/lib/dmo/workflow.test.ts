@@ -87,13 +87,13 @@ test("the MML gate counts contained tin, not the weight of the pile", () => {
   const sup = approvedSupplier(s);
   const ctx = { ...officer, actorId: sup.id };
 
-  // 950 kg at 72% is 684 kg of tin — under the 700 kg MML despite the tonnage.
-  for (let i = 0; i < 19; i++) {
+  // 1,350 kg at 72% is 972 kg of tin — under the one-tonne MML despite the tonnage.
+  for (let i = 0; i < 27; i++) {
     addPurchase(s, ctx, { supplierId: sup.id, date: "2026-08-20", source: "Miner", kg: 50, gradePct: 72, valueNgn: 1, reference: "" });
   }
   const short = eligibleInventory(s, sup.id);
-  assert.equal(short.tier1Kg, 950);
-  assert.ok(Math.abs(short.tier1SnKg - 684) < 0.01);
+  assert.equal(short.tier1Kg, 1_350);
+  assert.ok(Math.abs(short.tier1SnKg - 972) < 0.01);
   assert.equal(canSubmitLot(s, sup.id, 1), false);
 
   addPurchase(s, ctx, { supplierId: sup.id, date: "2026-08-21", source: "Miner", kg: 50, gradePct: 72, valueNgn: 1, reference: "" });
@@ -106,16 +106,18 @@ test("a heavier pile of poorer ore does not clear the MML", () => {
   const sup = approvedSupplier(s);
   const ctx = { ...officer, actorId: sup.id };
 
-  // Two tonnes, but only 20% tin — 400 kg contained, well under either MML.
-  addPurchase(s, ctx, { supplierId: sup.id, date: "2026-08-20", source: "Miner", kg: 2_000, gradePct: 20, valueNgn: 1, reference: "" });
+  // Four tonnes of material, but only 20% tin — 800 kg contained, still under
+  // the one-tonne MML.
+  addPurchase(s, ctx, { supplierId: sup.id, date: "2026-08-20", source: "Miner", kg: 4_000, gradePct: 20, valueNgn: 1, reference: "" });
   const inv = eligibleInventory(s, sup.id);
-  assert.equal(inv.tier2Kg, 2_000, "it is tier 2 by grade");
-  assert.equal(inv.tier2SnKg, 400);
+  assert.equal(inv.tier2Kg, 4_000, "it is tier 2 by grade");
+  assert.equal(inv.tier2SnKg, 800);
   assert.equal(canSubmitLot(s, sup.id, 2), false);
-  assert.throws(() => submitForInspection(s, ctx, { supplierId: sup.id, tier: 2, kg: 2_000 }), WorkflowError);
+  assert.throws(() => submitForInspection(s, ctx, { supplierId: sup.id, tier: 2, kg: 4_000 }), WorkflowError);
 
-  // Richer ore clears it on far less material.
-  addPurchase(s, ctx, { supplierId: sup.id, date: "2026-08-21", source: "Miner", kg: 1_100, gradePct: 50, valueNgn: 1, reference: "" });
+  // A little better ore carries the rest of the tonne on far less material.
+  addPurchase(s, ctx, { supplierId: sup.id, date: "2026-08-21", source: "Miner", kg: 500, gradePct: 50, valueNgn: 1, reference: "" });
+  assert.equal(eligibleInventory(s, sup.id).tier2SnKg, 1_050);
   assert.equal(canSubmitLot(s, sup.id, 2), true);
 });
 
@@ -211,7 +213,8 @@ test("submit records the chosen warehouse", () => {
   const s = emptyState(NOW);
   const sup = approvedSupplier(s);
   const ctx = { ...officer, actorId: sup.id };
-  for (let i = 0; i < 20; i++) {
+  // 1,400 kg at 72% carries 1,008 kg of tin, just over the one-tonne MML.
+  for (let i = 0; i < 28; i++) {
     addPurchase(s, ctx, {
       supplierId: sup.id,
       date: "2026-08-20",
@@ -223,7 +226,7 @@ test("submit records the chosen warehouse", () => {
     });
   }
   const warehouse = "NM-EX Approved Warehouse & Assay Centre — Lagos";
-  const { inspection } = submitForInspection(s, ctx, { supplierId: sup.id, tier: 1, kg: 1000, warehouse });
+  const { inspection } = submitForInspection(s, ctx, { supplierId: sup.id, tier: 1, kg: 1_400, warehouse });
   assert.equal(inspection.warehouse, warehouse);
 });
 
