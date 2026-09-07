@@ -40,8 +40,9 @@ export function SupplierPoolListings({
                 <tr>
                   <th className="px-5 pb-2 pt-3 font-semibold">Lot no.</th>
                   <th className="pb-2 pt-3 font-semibold">Origin</th>
-                  <th className="pb-2 pt-3 text-right font-semibold">Final weight</th>
+                  <th className="pb-2 pt-3 text-right font-semibold">Gross weight</th>
                   <th className="pb-2 pt-3 text-right font-semibold">Final grade</th>
+                  <th className="pb-2 pt-3 text-right font-semibold">Contained Sn</th>
                   <th className="pb-2 pt-3 text-right font-semibold">Listing price</th>
                   <th className="pb-2 pt-3 font-semibold">Listed</th>
                   <th className="pb-2 pt-3 font-semibold">Status</th>
@@ -61,6 +62,7 @@ export function SupplierPoolListings({
                       <td className="py-3">{originLine(me)}</td>
                       <td className="py-3 text-right tabular-nums">{formatKg(e.kg)}</td>
                       <td className="py-3 text-right tabular-nums">{formatPct(e.grade, 4)}</td>
+                      <td className="py-3 text-right tabular-nums font-semibold">{formatKg(e.containedKg)}</td>
                       <td className="py-3 text-right tabular-nums">{formatNgn(e.listing)}</td>
                       <td className="py-3 tabular-nums text-[var(--ink-muted)]">{offer ? formatDate(offer.opensAt) : "—"}</td>
                       <td className="py-3">

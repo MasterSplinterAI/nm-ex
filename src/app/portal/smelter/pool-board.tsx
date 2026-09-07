@@ -18,6 +18,8 @@ export function PoolBoard({
 }) {
   const rows = pool.map((entry) => ({ entry, e: lotEconomics(entry.lot, policy, lmeUsd, fxRate) }));
   const volume = rows.reduce((n, r) => n + r.e.kg, 0);
+  // The metal, which is what is actually being bought and priced.
+  const contained = rows.reduce((n, r) => n + r.e.containedKg, 0);
   const listing = rows.reduce((n, r) => n + r.e.listing, 0);
   const royalty = rows.reduce((n, r) => n + r.e.royalty, 0);
   const vat = rows.reduce((n, r) => n + r.e.vat, 0);
@@ -39,9 +41,10 @@ export function PoolBoard({
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Total available lots" value={String(rows.length)} />
-        <StatCard label="Total volume" value={formatKg(volume)} sub={`${(volume / 1000).toFixed(3)} tonnes`} />
+        <StatCard label="Gross weight" value={formatKg(volume)} sub={`${(volume / 1000).toFixed(3)} tonnes of material`} />
+        <StatCard label="Contained tin" value={formatKg(contained)} sub={`${(contained / 1000).toFixed(3)} tonnes of Sn`} />
         <StatCard label="Total listing value" value={formatNgn(listing)} />
       </div>
 
@@ -57,12 +60,13 @@ export function PoolBoard({
                 <tr className="bg-[#1b4d38] text-left text-[11px] font-semibold uppercase tracking-[0.05em] text-white">
                   <th className="py-2.5">Lot no.</th>
                   <th className="py-2.5">Supplier</th>
-                  <th className="py-2.5 text-right">Final weight (kg)</th>
+                  <th className="py-2.5 text-right">Gross weight (kg)</th>
                   <th className="py-2.5 text-right">Grade (Sn %)</th>
+                  <th className="py-2.5 text-right">Contained Sn (kg)</th>
                   <th className="py-2.5 text-right">Listing price (₦)</th>
                   <th className="py-2.5 text-right">Royalty {policy.royaltyPct}% (₦)</th>
                   <th className="py-2.5 text-right">VAT {policy.vatPct}% (₦)</th>
-                  <th className="py-2.5">Status</th>
+                  {/* No status column: every row on this board is an open offer. */}
                   <th className="py-2.5 text-right">Action</th>
                 </tr>
               </thead>
@@ -80,15 +84,12 @@ export function PoolBoard({
                       </td>
                       <td className="py-2.5 text-right">{e.kg.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       <td className="py-2.5 text-right">{e.grade.toFixed(4)}</td>
+                      <td className="py-2.5 text-right font-semibold">
+                        {e.containedKg.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
                       <td className="py-2.5 text-right font-semibold">{formatNgn(e.listing)}</td>
                       <td className="py-2.5 text-right">{formatNgn(e.royalty)}</td>
                       <td className="py-2.5 text-right">{formatNgn(e.vat)}</td>
-                      <td className="py-2.5">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#1b4d38]">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#1b4d38]" />
-                          Available
-                        </span>
-                      </td>
                       <td className="py-2.5">
                         <div className="flex justify-end gap-2">
                           <a
@@ -116,10 +117,11 @@ export function PoolBoard({
                   </td>
                   <td className="py-3 text-right">{volume.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td className="py-3" />
+                  <td className="py-3 text-right">{contained.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td className="py-3 text-right">{formatNgnPrecise(listing)}</td>
                   <td className="py-3 text-right">{formatNgnPrecise(royalty)}</td>
                   <td className="py-3 text-right">{formatNgnPrecise(vat)}</td>
-                  <td colSpan={2} />
+                  <td />
                 </tr>
               </tfoot>
             </table>
@@ -148,8 +150,9 @@ export function PoolBoard({
               Summary totals ({rows.length} lot{rows.length === 1 ? "" : "s"})
             </h2>
           </div>
-          <div className="grid gap-4 p-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Total label="Total volume" value={formatKg(volume)} sub={`${(volume / 1000).toFixed(3)} tonnes`} />
+          <div className="grid gap-4 p-4 sm:grid-cols-2 xl:grid-cols-5">
+            <Total label="Gross weight" value={formatKg(volume)} sub={`${(volume / 1000).toFixed(3)} tonnes`} />
+            <Total label="Contained tin" value={formatKg(contained)} sub={`${(contained / 1000).toFixed(3)} tonnes Sn`} />
             <Total label="Total listing value" value={formatNgn(listing)} />
             <Total label={`Total royalty (${policy.royaltyPct}%)`} value={formatNgn(royalty)} />
             <Total label={`Total VAT (${policy.vatPct}%)`} value={formatNgn(vat)} />
