@@ -8,6 +8,15 @@ import { WorkflowError, type ParticipantCategory, type UploadedDoc } from "@/lib
 import { submitRegistration } from "@/lib/dmo/workflow";
 
 const CATEGORIES: ParticipantCategory[] = ["tin_shed", "mining_company", "aggregator", "smelter", "end_user"];
+const DOCUMENT_NAME = /\.(pdf|jpe?g|png)$/i;
+
+function documentType(name: string): string {
+  const extension = name.split(".").pop()?.toLowerCase();
+  if (extension === "pdf") return "application/pdf";
+  if (extension === "png") return "image/png";
+  if (extension === "jpg" || extension === "jpeg") return "image/jpeg";
+  return "application/octet-stream";
+}
 
 export async function submitRegistrationAction(
   _prev: ActionResult,
@@ -17,10 +26,20 @@ export async function submitRegistrationAction(
   const result = await guarded(async () => {
     const category = str(formData, "category") as ParticipantCategory;
     if (!CATEGORIES.includes(category)) throw new WorkflowError("Choose a participant type.");
-    const documents: UploadedDoc[] = formData
-      .getAll("documents")
-      .filter((f): f is File => f instanceof File && f.size > 0)
-      .map((f) => ({ name: f.name, type: f.type || "application/octet-stream" }));
+    // This demonstration records document metadata only; file bytes never leave the browser.
+    const documentNames = formData.getAll("documentNames");
+    if (
+      documentNames.length > 10 ||
+      documentNames.some(
+        (name) => typeof name !== "string" || name.length === 0 || name.length > 255 || !DOCUMENT_NAME.test(name),
+      )
+    ) {
+      throw new WorkflowError("Documents must be PDF, JPG, or PNG files with valid file names.");
+    }
+    const documents: UploadedDoc[] = documentNames.map((name) => {
+      const fileName = name as string;
+      return { name: fileName, type: documentType(fileName) };
+    });
     const participant = await mutate("anon", (state, ctx) =>
       submitRegistration(state, ctx, {
         role: CATEGORY_ROLE[category],
